@@ -6,7 +6,7 @@ import packageJson from '../package.json';
 
 export const CONFIG = {
   site: {
-    name: 'Comercializadora',
+    name: 'Comercializadora SC',
     serverUrl: process.env.NEXT_PUBLIC_SERVER_URL ?? '',
     frontUrl: process.env.NEXT_PUBLIC_FRONT_URL ?? '',
     assetURL: process.env.NEXT_PUBLIC_ASSET_URL ?? '',
