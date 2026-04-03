@@ -1,0 +1,43 @@
+import * as React from 'react';
+
+import Dialog from '@mui/material/Dialog';
+import IconButton from '@mui/material/IconButton';
+import CloseIcon from '@mui/icons-material/Close';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+
+import { PedidosPendientesTabla } from './pedidos-pendientes-tabla';
+
+export default function PedidosPendientesDialog({ cliente, open, setOpen }) {
+  return (
+    <Dialog
+      open={open}
+      maxWidth="md"
+      onClose={() => {
+        setOpen(false);
+      }}
+      fullWidth
+    >
+      <DialogTitle sx={{ p: 2 }}>Pedidos pendientes</DialogTitle>
+
+      <IconButton
+        aria-label="close"
+        onClick={() => {
+          setOpen(false);
+        }}
+        sx={{
+          position: 'absolute',
+          right: 8,
+          top: 8,
+          color: (theme) => theme.palette.grey[500],
+        }}
+      >
+        <CloseIcon />
+      </IconButton>
+
+      <DialogContent sx={{ px: 0 }}>
+        <PedidosPendientesTabla cliente={cliente} setOpen={setOpen} />
+      </DialogContent>
+    </Dialog>
+  );
+}
