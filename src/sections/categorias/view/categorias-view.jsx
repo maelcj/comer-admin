@@ -273,7 +273,7 @@ export function CategoriasView() {
         sx={{ mb: { xs: 3, md: 5 } }}
       />
 
-      <Card sx={{ p: 2, mb: 3, bgcolor: 'primary.darker' }}>
+      {/* <Card sx={{ p: 2, mb: 3, bgcolor: 'primary.darker' }}>
         <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={2}>
           <Typography variant="body2">
             La cantidad de productos y las categorías sugeridas se calculan automáticamente cada
@@ -291,7 +291,7 @@ export function CategoriasView() {
             Actualizar ahora
           </LoadingButton>
         </Stack>
-      </Card>
+      </Card> */}
 
       <CategoriasEditar2Dialog
         open={openEditar2Dialog}

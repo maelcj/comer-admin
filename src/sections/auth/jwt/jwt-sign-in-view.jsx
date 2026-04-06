@@ -27,6 +27,7 @@ import { signInWithPassword } from 'src/auth/context/jwt';
 export const SignInSchema = zod.object({
   email: zod
     .string()
+    .trim()
     .min(1, { message: 'Email is required!' })
     .email({ message: 'Email must be a valid email address!' }),
   password: zod
