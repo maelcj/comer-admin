@@ -356,6 +356,7 @@ export function FormFacturacion({ pedido }) {
             name="metodo_pago"
             label="método de pago"
             sx={{ width: '100%' }}
+            InputLabelProps={{ shrink: true }}
           >
             <option value="">Selecciona método de pago</option>
             {metodo_pago.map((option) => (
@@ -372,6 +373,7 @@ export function FormFacturacion({ pedido }) {
             name="forma_pago"
             label="forma de pago"
             sx={{ width: '100%' }}
+            InputLabelProps={{ shrink: true }}
           >
             <option value="">Selecciona forma de pago</option>
             {forma_pago.map((option) => (
@@ -382,7 +384,14 @@ export function FormFacturacion({ pedido }) {
           </Field.Select>
         </Grid>
         <Grid item xs={12} md={6}>
-          <Field.Select native size="small" name="uso_cfdi" label="uso cfdi" sx={{ width: '100%' }}>
+          <Field.Select
+            native
+            size="small"
+            name="uso_cfdi"
+            label="uso cfdi"
+            sx={{ width: '100%' }}
+            InputLabelProps={{ shrink: true }}
+          >
             <option value="">Selecciona uso de CFDI</option>
             {uso_cfdi.map((option) => (
               <option key={option.value} value={option.value}>
