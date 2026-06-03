@@ -4,7 +4,6 @@ import { useDebounce } from 'use-debounce';
 import { useState, useEffect, useCallback } from 'react';
 
 import Card from '@mui/material/Card';
-import Stack from '@mui/material/Stack';
 import Dialog from '@mui/material/Dialog';
 import Tooltip from '@mui/material/Tooltip';
 import { esES } from '@mui/x-data-grid/locales';
@@ -18,52 +17,58 @@ import {
   GridToolbarQuickFilter,
 } from '@mui/x-data-grid';
 
-import { getProductos } from 'src/actions/comentarios';
+import { fDate } from 'src/utils/format-time';
 
-import { plusIcon, searchIcon } from 'src/components/icons';
+import { getComentarios } from 'src/actions/comentarios';
+
+import { penIcon } from 'src/components/icons';
 import { EmptyContent } from 'src/components/empty-content';
 
-import { ComentariosTable } from './comentarios-table';
-import CreateComentarioDialog from '../create-comentario-dialog';
+import Comentario from '../comentario';
 
 // ----------------------------------------------------------------------
 
-export function ProductosComentariosTable({ onSearchMpn }) {
+export function ComentariosTable({ searchInitialValue }) {
   const [isLoading, setIsLoading] = useState(true);
   const [rows, setRows] = useState([]);
   const [rowsCount, setRowsCount] = useState(0);
   const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 5 });
-  const [filterModel, setFilterModel] = useState({ items: [], quickFilterValues: [] });
+  const [sortModel, setSortModel] = useState([{ field: 'created_at', sort: 'desc' }]);
+  const [filterModel, setFilterModel] = useState({
+    items: [],
+    quickFilterValues: searchInitialValue ? [searchInitialValue] : [],
+  });
   const [debounceFilterModel] = useDebounce(filterModel, 500);
 
-  const [createDialogOpen, setCreateDialogOpen] = useState(false);
-  const [selectedProductId, setSelectedProductId] = useState(null);
-
-  const [viewDialogOpen, setViewDialogOpen] = useState(false);
-  const [selectedMpn, setSelectedMpn] = useState('');
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [selectedComentario, setSelectedComentario] = useState(null);
 
   const fetchTableData = useCallback(async () => {
     setIsLoading(true);
-    const data = await getProductos(paginationModel, debounceFilterModel);
+    const data = await getComentarios(paginationModel, debounceFilterModel, sortModel);
     if (data?.rows) {
       setRows(data.rows);
       setRowsCount(data.totalRows);
     }
     setIsLoading(false);
-  }, [debounceFilterModel, paginationModel]);
+  }, [debounceFilterModel, paginationModel, sortModel]);
 
   useEffect(() => {
     fetchTableData();
-  }, [fetchTableData, paginationModel, debounceFilterModel]);
+  }, [fetchTableData, paginationModel, debounceFilterModel, sortModel]);
 
-  const handleCreateComentario = (productoId) => {
-    setSelectedProductId(productoId);
-    setCreateDialogOpen(true);
-  };
+  useEffect(() => {
+    if (searchInitialValue) {
+      setFilterModel({
+        items: [],
+        quickFilterValues: [searchInitialValue],
+      });
+    }
+  }, [searchInitialValue]);
 
-  const handleViewComentarios = (mpn) => {
-    setSelectedMpn(mpn);
-    setViewDialogOpen(true);
+  const handleEdit = (comentario) => {
+    setSelectedComentario(comentario);
+    setEditDialogOpen(true);
   };
 
   const columns = [
@@ -98,50 +103,49 @@ export function ProductosComentariosTable({ onSearchMpn }) {
       sortable: false,
     },
     {
-      field: 'comentarios_count',
-      headerName: 'cantidad de comentarios',
-      minWidth: 180,
+      field: 'created_at',
+      headerName: 'fecha',
+      minWidth: 150,
+      flex: 1,
+      hideable: false,
+      filterable: false,
+      disableColumnMenu: true,
+      sortable: true,
+      renderCell: (params) => fDate(params.row.created_at),
+    },
+    {
+      field: 'respuesta',
+      headerName: 'respondido',
+      minWidth: 120,
       flex: 1,
       hideable: false,
       filterable: false,
       disableColumnMenu: true,
       sortable: false,
+      renderCell: (params) => (params.row.respuesta ? 'Sí' : 'No'),
     },
     {
       type: 'actions',
       field: 'actions',
-      headerName: 'acciones',
+      headerName: 'editar',
       align: 'right',
       headerAlign: 'right',
-      width: 120,
+      width: 80,
       sortable: false,
       filterable: false,
       disableColumnMenu: true,
       renderCell: (params) => (
-        <Stack direction="row" spacing={1}>
-          <Tooltip title="Ver comentarios del producto" placement="top">
-            <IconButton
-              color="info"
-              variant="soft"
-              onClick={() => {
-                handleViewComentarios(params.row.mpn);
-              }}
-            >
-              {searchIcon}
-            </IconButton>
-          </Tooltip>
-          <Tooltip title="Registrar un comentario al producto" placement="top">
-            <IconButton
-              color="primary"
-              variant="soft"
-              onClick={() => {
-                handleCreateComentario(params.row.id);
-              }}
-            >
-              {plusIcon}
-            </IconButton>
-          </Tooltip>
-        </Stack>
+        <Tooltip title="Editar comentario" placement="right">
+          <IconButton
+            color="warning"
+            variant="soft"
+            onClick={() => {
+              handleEdit(params.row);
+            }}
+          >
+            {penIcon}
+          </IconButton>
+        </Tooltip>
       ),
     },
   ];
@@ -164,9 +168,13 @@ export function ProductosComentariosTable({ onSearchMpn }) {
         sortingMode="server"
         onPaginationModelChange={setPaginationModel}
         onFilterModelChange={setFilterModel}
+        onSortModelChange={setSortModel}
         initialState={{
           pagination: { paginationModel },
           density: 'compact',
+          sorting: {
+            sortModel: [{ field: 'created_at', sort: 'desc' }],
+          },
           filter: {
             filterModel: {
               items: [],
@@ -185,24 +193,23 @@ export function ProductosComentariosTable({ onSearchMpn }) {
         }}
       />
 
-      {createDialogOpen && (
-        <CreateComentarioDialog
-          open={createDialogOpen}
-          onClose={() => setCreateDialogOpen(false)}
-          onComentarioCreated={fetchTableData}
-          productoId={selectedProductId}
-        />
-      )}
-
       <Dialog
-        open={viewDialogOpen}
-        onClose={() => setViewDialogOpen(false)}
-        maxWidth="lg"
+        open={editDialogOpen}
+        onClose={() => setEditDialogOpen(false)}
+        maxWidth="md"
         fullWidth
       >
-        <DialogTitle>Comentarios del Producto: {selectedMpn}</DialogTitle>
-        <DialogContent sx={{ pt: 2, minHeight: 400 }}>
-          <ComentariosTable searchInitialValue={selectedMpn} />
+        <DialogTitle>Editar Comentario</DialogTitle>
+        <DialogContent>
+          {selectedComentario && (
+            <Comentario
+              comentario={selectedComentario}
+              handleGetComentarios={() => {
+                fetchTableData();
+                setEditDialogOpen(false);
+              }}
+            />
+          )}
         </DialogContent>
       </Dialog>
     </Card>
