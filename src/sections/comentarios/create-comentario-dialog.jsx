@@ -16,9 +16,7 @@ import { crearComentario } from 'src/actions/comentarios';
 
 import { toast } from 'src/components/snackbar';
 
-import ProductSelectionDialog from './product-selection-dialog';
-
-const CreateComentarioDialog = ({ open, onClose, onComentarioCreated }) => {
+const CreateComentarioDialog = ({ open, onClose, onComentarioCreated, productoId }) => {
   const [formData, setFormData] = useState({
     nombre: '',
     correo: '',
@@ -27,24 +25,14 @@ const CreateComentarioDialog = ({ open, onClose, onComentarioCreated }) => {
     respuesta: '',
     calificacion: 5,
     review: false,
-    producto_id: null,
+    producto_id: productoId,
   });
-  const [selectedProduct, setSelectedProduct] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [productDialogOpen, setProductDialogOpen] = useState(false);
 
   const handleInputChange = (field, value) => {
     setFormData((prev) => ({
       ...prev,
       [field]: value,
-    }));
-  };
-
-  const handleProductSelect = (product) => {
-    setSelectedProduct(product);
-    setFormData((prev) => ({
-      ...prev,
-      producto_id: product.id,
     }));
   };
 
@@ -81,123 +69,106 @@ const CreateComentarioDialog = ({ open, onClose, onComentarioCreated }) => {
       respuesta: '',
       calificacion: 5,
       review: false,
-      producto_id: null,
+      producto_id: productoId,
     });
-    setSelectedProduct(null);
     onClose();
   };
 
   return (
-    <>
-      <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
-        <DialogTitle>Crear Nuevo Comentario</DialogTitle>
-        <DialogContent>
-          <Grid container spacing={2} sx={{ mt: 1 }}>
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                size="small"
-                label="Nombre *"
-                value={formData.nombre}
-                onChange={(e) => handleInputChange('nombre', e.target.value)}
-              />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                size="small"
-                label="Correo *"
-                type="email"
-                value={formData.correo}
-                onChange={(e) => handleInputChange('correo', e.target.value)}
-              />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                size="small"
-                label="Teléfono"
-                value={formData.telefono}
-                onChange={(e) => handleInputChange('telefono', e.target.value)}
-              />
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                size="small"
-                label="Calificación"
-                type="number"
-                inputProps={{ min: 1, max: 5 }}
-                value={formData.calificacion}
-                onChange={(e) =>
-                  handleInputChange('calificacion', parseInt(e.target.value, 10) || 1)
-                }
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <Button variant="outlined" onClick={() => setProductDialogOpen(true)} sx={{ mb: 1 }}>
-                {selectedProduct
-                  ? `Producto: ${selectedProduct.nombreCompleto}`
-                  : 'Seleccionar Producto *'}
-              </Button>
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                multiline
-                rows={4}
-                label="Comentario *"
-                value={formData.comentario}
-                onChange={(e) => handleInputChange('comentario', e.target.value)}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                multiline
-                rows={3}
-                label="Respuesta"
-                value={formData.respuesta}
-                onChange={(e) => handleInputChange('respuesta', e.target.value)}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={formData.review}
-                    onChange={(e) => handleInputChange('review', e.target.checked)}
-                  />
-                }
-                label="Review"
-              />
-            </Grid>
+    <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
+      <DialogTitle>Crear Nuevo Comentario</DialogTitle>
+      <DialogContent>
+        <Grid container spacing={2} sx={{ mt: 1 }}>
+          <Grid item xs={12} md={6}>
+            <TextField
+              fullWidth
+              size="small"
+              label="Nombre *"
+              value={formData.nombre}
+              onChange={(e) => handleInputChange('nombre', e.target.value)}
+            />
           </Grid>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleClose}>Cancelar</Button>
-          <Button
-            onClick={handleSubmit}
-            variant="contained"
-            disabled={
-              loading ||
-              !formData.nombre ||
-              !formData.correo ||
-              !formData.comentario ||
-              !formData.producto_id
-            }
-          >
-            {loading ? 'Creando...' : 'Crear Comentario'}
-          </Button>
-        </DialogActions>
-      </Dialog>
+          <Grid item xs={12} md={6}>
+            <TextField
+              fullWidth
+              size="small"
+              label="Correo *"
+              type="email"
+              value={formData.correo}
+              onChange={(e) => handleInputChange('correo', e.target.value)}
+            />
+          </Grid>
+          <Grid item xs={12} md={6}>
+            <TextField
+              fullWidth
+              size="small"
+              label="Teléfono"
+              value={formData.telefono}
+              onChange={(e) => handleInputChange('telefono', e.target.value)}
+            />
+          </Grid>
+          <Grid item xs={12} md={6}>
+            <TextField
+              fullWidth
+              size="small"
+              label="Calificación"
+              type="number"
+              inputProps={{ min: 1, max: 5 }}
+              value={formData.calificacion}
+              onChange={(e) => handleInputChange('calificacion', parseInt(e.target.value, 10) || 1)}
+            />
+          </Grid>
 
-      <ProductSelectionDialog
-        open={productDialogOpen}
-        onClose={() => setProductDialogOpen(false)}
-        onSelectProduct={handleProductSelect}
-      />
-    </>
+          <Grid item xs={12}>
+            <TextField
+              fullWidth
+              multiline
+              rows={4}
+              label="Comentario *"
+              value={formData.comentario}
+              onChange={(e) => handleInputChange('comentario', e.target.value)}
+            />
+          </Grid>
+          <Grid item xs={12}>
+            <TextField
+              fullWidth
+              multiline
+              rows={3}
+              label="Respuesta"
+              value={formData.respuesta}
+              onChange={(e) => handleInputChange('respuesta', e.target.value)}
+            />
+          </Grid>
+          <Grid item xs={12}>
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={formData.review}
+                  onChange={(e) => handleInputChange('review', e.target.checked)}
+                />
+              }
+              label="Review"
+            />
+          </Grid>
+        </Grid>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={handleClose}>Cancelar</Button>
+        <Button
+          onClick={handleSubmit}
+          variant="contained"
+          disabled={
+            loading ||
+            !formData.nombre ||
+            !formData.correo ||
+            !formData.comentario ||
+            !formData.producto_id
+          }
+        >
+          {loading ? 'Creando...' : 'Crear Comentario'}
+        </Button>
+      </DialogActions>
+    </Dialog>
   );
 };
 

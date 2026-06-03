@@ -5,11 +5,11 @@ import { axiosServer } from 'src/utils/axiosInterceptor';
 
 // ----------------------------------------------------------------------
 
-export async function getComentarios(page) {
+export async function getComentarios(paginationModel, filterModel, sortModel) {
   const url = endpoints.comentarios.getComentarios;
 
   return axiosServer()
-    .get(url, { params: { page } })
+    .get(url, { params: { paginationModel, filterModel, sortModel } })
     .then((res) => res.data)
     .catch((error) => {
       const message = {
@@ -99,11 +99,11 @@ export async function enviarComentario(id) {
     });
 }
 
-export async function getProductos(search, page) {
+export async function getProductos(paginationModel, filterModel) {
   const url = endpoints.comentarios.getProductos;
 
   return axiosServer()
-    .get(url, { params: { search, page } })
+    .get(url, { params: { paginationModel, filterModel } })
     .then((res) => res.data)
     .catch((error) => {
       const message = {
