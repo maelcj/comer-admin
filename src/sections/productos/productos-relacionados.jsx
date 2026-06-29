@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 import Card from '@mui/material/Card';
 import Grid from '@mui/material/Grid';
@@ -8,19 +8,39 @@ import CardHeader from '@mui/material/CardHeader';
 import Typography from '@mui/material/Typography';
 import LoadingButton from '@mui/lab/LoadingButton';
 
-import { eliminarProductoSimilar, eliminarProductoRelacionado } from 'src/actions/productos';
+import {
+  eliminarProductoSimilar,
+  eliminarProductoRelacionado,
+  getProductosRelacionadosSimilares,
+} from 'src/actions/productos';
 
 import { toast } from 'src/components/snackbar';
 
 import { TablaProductosRelacionados } from './tabla-productos-relacionados';
 
-const ProductosRelacionados = ({ producto, handleGetProducto }) => {
+const ProductosRelacionados = ({ producto }) => {
   const [isLoading, setIsLoading] = useState(false);
+  const [relacionados, setRelacionados] = useState([]);
+  const [similares, setSimilares] = useState([]);
+
+  const fetchRelacionadosSimilares = useCallback(async () => {
+    setIsLoading(true);
+    const res = await getProductosRelacionadosSimilares(producto.id);
+    setIsLoading(false);
+    if (res) {
+      setRelacionados(res.relacionados || []);
+      setSimilares(res.similares || []);
+    }
+  }, [producto.id]);
+
+  useEffect(() => {
+    fetchRelacionadosSimilares();
+  }, [fetchRelacionadosSimilares]);
 
   const handleEliminarProductoRelacionado = async (id_relacionado) => {
     setIsLoading(true);
     const res = await eliminarProductoRelacionado(id_relacionado);
-    await handleGetProducto(producto.id);
+    await fetchRelacionadosSimilares();
     setIsLoading(false);
 
     if (res.type === 'error') return toast.error(res.message);
@@ -31,7 +51,7 @@ const ProductosRelacionados = ({ producto, handleGetProducto }) => {
   const handleEliminarProductoSimilar = async (id_similar) => {
     setIsLoading(true);
     const res = await eliminarProductoSimilar(id_similar);
-    await handleGetProducto(producto.id);
+    await fetchRelacionadosSimilares();
     setIsLoading(false);
 
     if (res.type === 'error') return toast.error(res.message);
@@ -45,14 +65,17 @@ const ProductosRelacionados = ({ producto, handleGetProducto }) => {
 
       <Divider />
 
-      <TablaProductosRelacionados producto={producto} handleGetProducto={handleGetProducto} />
+      <TablaProductosRelacionados
+        producto={producto}
+        handleGetProducto={fetchRelacionadosSimilares}
+      />
 
       <Grid container spacing={2} sx={{ p: 3 }}>
         <Grid item xs={6}>
           <Typography variant="subtitle2">Productos relacionados</Typography>
 
           <Stack spacing={1} sx={{ mt: 2 }}>
-            {producto?.productos_relacionados_manual?.map((relacionado) => (
+            {relacionados.map((relacionado) => (
               <LoadingButton
                 key={relacionado.id}
                 variant="soft"
@@ -73,7 +96,7 @@ const ProductosRelacionados = ({ producto, handleGetProducto }) => {
           <Typography variant="subtitle2">Productos similares</Typography>
 
           <Stack spacing={1} sx={{ mt: 2 }}>
-            {producto?.productos_similares?.map((similar) => (
+            {similares.map((similar) => (
               <LoadingButton
                 key={similar.id}
                 variant="soft"

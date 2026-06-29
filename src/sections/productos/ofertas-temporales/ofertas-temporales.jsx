@@ -18,7 +18,7 @@ import { toast } from 'src/components/snackbar';
 import OfertaChip from './oferta-chip';
 import DialogCrear from './dialog-crear';
 
-const OfertasTemporales = ({ producto, handleGetProducto }) => {
+const OfertasTemporales = ({ producto }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [openDialogCrear, setOpenDialogCrear] = useState(false);
   const [ofertas, setOfertas] = useState([]);
@@ -38,7 +38,7 @@ const OfertasTemporales = ({ producto, handleGetProducto }) => {
 
   useEffect(() => {
     handleGetOfertas();
-  }, [producto]);
+  }, [producto.id]);
 
   return (
     <>
@@ -47,7 +47,6 @@ const OfertasTemporales = ({ producto, handleGetProducto }) => {
         setOpen={setOpenDialogCrear}
         producto={producto}
         handleGetOfertas={handleGetOfertas}
-        handleGetProducto={handleGetProducto}
       />
       <Card>
         <Backdrop
@@ -94,12 +93,7 @@ const OfertasTemporales = ({ producto, handleGetProducto }) => {
               </Typography>
             ) : (
               ofertas.map((oferta) => (
-                <OfertaChip
-                  key={oferta.id}
-                  oferta={oferta}
-                  handleGetOfertas={handleGetOfertas}
-                  handleGetProducto={handleGetProducto}
-                />
+                <OfertaChip key={oferta.id} oferta={oferta} handleGetOfertas={handleGetOfertas} />
               ))
             )}
           </Box>

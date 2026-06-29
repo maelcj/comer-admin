@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 
+import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import { esES } from '@mui/x-data-grid/locales';
 import {
@@ -120,32 +121,34 @@ export function TablaProductosRelacionados({ producto, handleGetProducto }) {
   }, [fetchTableData, paginationModel, filterModel]);
 
   return (
-    <DataGrid
-      rows={rows}
-      columns={columns}
-      pagination
-      slots={{
-        toolbar: CustomToolbar,
-        noRowsOverlay: () => <EmptyContent />,
-        noResultsOverlay: () => <EmptyContent title="No se encontraron resultados" />,
-      }}
-      loading={isLoading}
-      filterMode="server"
-      paginationMode="server"
-      localeText={esES.components.MuiDataGrid.defaultProps.localeText}
-      onPaginationModelChange={setPaginationModel}
-      onFilterModelChange={setFilterModel}
-      initialState={{ pagination: { paginationModel } }}
-      pageSizeOptions={[5, 10, 25]}
-      rowCount={rowsCount}
-      getRowHeight={() => 'auto'}
-      disableRowSelectionOnClick
-      autoHeight
-      sx={{
-        '--DataGrid-overlayHeight': '220px',
-        [`& .${gridClasses.cell}`]: { alignItems: 'center', display: 'inline-flex' },
-      }}
-    />
+    <Box sx={{ width: '100%' }}>
+      <DataGrid
+        rows={rows}
+        columns={columns}
+        pagination
+        slots={{
+          toolbar: CustomToolbar,
+          noRowsOverlay: () => <EmptyContent />,
+          noResultsOverlay: () => <EmptyContent title="No se encontraron resultados" />,
+        }}
+        loading={isLoading}
+        filterMode="server"
+        paginationMode="server"
+        localeText={esES.components.MuiDataGrid.defaultProps.localeText}
+        onPaginationModelChange={setPaginationModel}
+        onFilterModelChange={setFilterModel}
+        initialState={{ pagination: { paginationModel } }}
+        pageSizeOptions={[5, 10, 25]}
+        rowCount={rowsCount}
+        getRowHeight={() => 'auto'}
+        disableRowSelectionOnClick
+        autoHeight
+        sx={{
+          '--DataGrid-overlayHeight': '220px',
+          [`& .${gridClasses.cell}`]: { alignItems: 'center', display: 'inline-flex' },
+        }}
+      />
+    </Box>
   );
 }
 

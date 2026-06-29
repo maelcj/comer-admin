@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import * as NProgress from 'nprogress';
 
+import Tab from '@mui/material/Tab';
+import Tabs from '@mui/material/Tabs';
 import Card from '@mui/material/Card';
 import Link from '@mui/material/Link';
 import { Box, Stack } from '@mui/system';
@@ -20,15 +22,17 @@ import { getProducto, duplicarProducto } from 'src/actions/productos';
 
 import { Label } from 'src/components/label';
 import { toast } from 'src/components/snackbar';
+import { Iconify } from 'src/components/iconify';
 import { copyIcon, arrowRightIcon } from 'src/components/icons';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-import ProductoFicha from '../producto-ficha';
 import ProductoImagenes from '../producto-imagenes';
 import { ProductoEditForm } from '../producto-edit-form';
-import ProductoDescripcion from '../producto-descripcion';
 import { OfertasTemporales } from '../ofertas-temporales';
+import ProductoDescripcion from '../producto-descripcion';
+import ProductoFichaCampos from '../producto-ficha-campos';
 import ProductosRelacionados from '../productos-relacionados';
+import ProductoFichaDescripcion from '../producto-ficha-descripcion';
 import RefaccionesRelacionadas from '../refacciones-relacionadas/refacciones-relacionadas';
 
 // ----------------------------------------------------------------------
@@ -38,6 +42,7 @@ export function ProductoEditView({ productoPrev, plantillasPrev }) {
   const [producto, setProducto] = useState(productoPrev);
   const [plantillas, setPlantillas] = useState(plantillasPrev);
   const [isLoading, setIsLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState('general');
 
   const handleGetProducto = async () => {
     const res = await getProducto(producto.id);
@@ -85,7 +90,7 @@ export function ProductoEditView({ productoPrev, plantillasPrev }) {
         sx={{ mb: { xs: 1, md: 2 } }}
       />
 
-      <Stack direction="column" spacing={1} sx={{ mb: 1 }}>
+      <Stack direction="column" spacing={1} sx={{ mb: 3 }}>
         {producto.visible === 'si' && (
           <>
             <Typography variant="body2">
@@ -131,36 +136,83 @@ export function ProductoEditView({ productoPrev, plantillasPrev }) {
         )}
       </Stack>
 
-      <Card sx={{ mb: 2 }}>
-        <CardHeader title="Información general" sx={{ mb: 3 }} />
-        <Divider />
-        <ProductoEditForm producto={producto} handleGetProducto={handleGetProducto} />
+      <Card sx={{ mb: 3 }}>
+        <Tabs
+          value={activeTab}
+          onChange={(event, newValue) => setActiveTab(newValue)}
+          sx={{
+            px: 3,
+            boxShadow: (theme) => `inset 0 -2px 0 0 ${theme.palette.background.neutral}`,
+          }}
+        >
+          <Tab
+            value="general"
+            label="General"
+            icon={<Iconify icon="solar:info-circle-bold" width={24} />}
+            iconPosition="start"
+            sx={{ minHeight: 64 }}
+          />
+          <Tab
+            value="detalles"
+            label="Detalles & Ficha Técnica"
+            icon={<Iconify icon="solar:document-text-bold" width={24} />}
+            iconPosition="start"
+            sx={{ minHeight: 64 }}
+          />
+          <Tab
+            value="relaciones"
+            label="Relaciones"
+            icon={<Iconify icon="solar:link-circle-bold" width={24} />}
+            iconPosition="start"
+            sx={{ minHeight: 64 }}
+          />
+        </Tabs>
       </Card>
 
-      <Grid container spacing={3}>
-        <Grid xs={12} md={6}>
-          <OfertasTemporales producto={producto} handleGetProducto={handleGetProducto} />
+      <Box sx={{ display: activeTab === 'general' ? 'block' : 'none' }}>
+        <Grid container spacing={3}>
+          <Grid xs={12} md={12}>
+            <Card sx={{ mb: 2 }}>
+              <CardHeader title="Información general" sx={{ mb: 3 }} />
+              <Divider />
+              <ProductoEditForm producto={producto} handleGetProducto={handleGetProducto} />
+            </Card>
+          </Grid>
+          <Grid xs={12} md={6}>
+            <ProductoImagenes producto={producto} />
+          </Grid>
+          <Grid xs={12} md={6}>
+            <OfertasTemporales producto={producto} />
+          </Grid>
         </Grid>
-        <Grid xs={12} md={6}>
-          <ProductoDescripcion producto={producto} />
+      </Box>
+
+      <Box sx={{ display: activeTab === 'detalles' ? 'block' : 'none' }}>
+        <Grid container spacing={3}>
+          <Grid xs={12} md={12}>
+            <ProductoDescripcion producto={producto} />
+          </Grid>
+          <Grid xs={12} md={6}>
+            <ProductoFichaDescripcion producto={producto} />
+          </Grid>
+          <Grid xs={12} md={6}>
+            <ProductoFichaCampos producto={producto} plantillas={plantillas} />
+          </Grid>
         </Grid>
-        <Grid xs={12} md={6}>
-          <ProductoImagenes producto={producto} handleGetProducto={handleGetProducto} />
-        </Grid>
-        <Grid xs={12} md={6}>
-          <ProductoFicha
-            producto={producto}
-            plantillas={plantillas}
-            handleGetProducto={handleGetProducto}
-          />
-        </Grid>
-        <Grid xs={12} md={6}>
-          <ProductosRelacionados producto={producto} handleGetProducto={handleGetProducto} />
-        </Grid>
-        <Grid xs={12} md={6}>
-          <RefaccionesRelacionadas producto={producto} />
-        </Grid>
-      </Grid>
+      </Box>
+
+      <Box sx={{ display: activeTab === 'relaciones' ? 'block' : 'none' }}>
+        {activeTab === 'relaciones' && (
+          <Grid container spacing={3}>
+            <Grid xs={12} md={6}>
+              <ProductosRelacionados producto={producto} />
+            </Grid>
+            <Grid xs={12} md={6}>
+              <RefaccionesRelacionadas producto={producto} />
+            </Grid>
+          </Grid>
+        )}
+      </Box>
     </DashboardContent>
   );
 }

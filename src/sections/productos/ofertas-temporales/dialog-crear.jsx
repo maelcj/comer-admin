@@ -61,12 +61,12 @@ const OfertaTemporalSchema = zod
     }
   );
 
-const DialogCrear = ({ open, setOpen, producto, handleGetOfertas, handleGetProducto }) => {
+const DialogCrear = ({ open, setOpen, producto, handleGetOfertas }) => {
   const [isLoading, setIsLoading] = useState(false);
 
   const defaultValues = {
-    fecha_inicio: null,
-    fecha_fin: null,
+    fecha_inicio: dayjs().hour(8).minute(0).second(0),
+    fecha_fin: dayjs().hour(18).minute(0).second(0),
     aplicar_a: 'precio_lista',
     tipo_descuento: 'porcentaje',
     cantidad_descuento: 0,
@@ -127,7 +127,6 @@ const DialogCrear = ({ open, setOpen, producto, handleGetOfertas, handleGetProdu
 
     toast.success(res.message);
     await handleGetOfertas();
-    if (handleGetProducto) await handleGetProducto();
     setOpen(false);
     reset();
   });

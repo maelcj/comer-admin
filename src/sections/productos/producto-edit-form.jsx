@@ -1,9 +1,10 @@
 import { z as zod } from 'zod';
-import { useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useRef, useMemo, useState, useEffect } from 'react';
 
 import Box from '@mui/material/Box';
+import Chip from '@mui/material/Chip';
 import Stack from '@mui/material/Stack';
 import LoadingButton from '@mui/lab/LoadingButton';
 
@@ -87,6 +88,8 @@ export const NewProductSchema = zod.object({
 // ----------------------------------------------------------------------
 
 export function ProductoEditForm({ producto, handleGetProducto = () => {} }) {
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const initialValuesRef = useRef(null);
   const defaultValues = useMemo(
     () => ({
       mpn: producto?.mpn || '',
@@ -123,13 +126,53 @@ export function ProductoEditForm({ producto, handleGetProducto = () => {} }) {
 
   const {
     handleSubmit,
+    watch,
     formState: { isSubmitting },
   } = methods;
+
+  // Observar todos los campos del formulario
+  const watchedValues = watch();
+
+  // Sincronizar valores de referencia cuando el producto cambia externamente
+  useEffect(() => {
+    initialValuesRef.current = { ...defaultValues };
+    methods.reset(defaultValues);
+    setHasUnsavedChanges(false);
+  }, [defaultValues, methods]);
+
+  // Detectar cambios comparando con los valores iniciales
+  useEffect(() => {
+    if (!initialValuesRef.current) return;
+
+    const hasChanges = Object.keys(initialValuesRef.current).some(
+      (key) => String(watchedValues[key] ?? '') !== String(initialValuesRef.current[key] ?? '')
+    );
+    setHasUnsavedChanges(hasChanges);
+  }, [watchedValues]);
+
+  // Prevenir pérdida de datos al salir de la página
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      if (hasUnsavedChanges) {
+        e.preventDefault();
+        e.returnValue = 'Tienes cambios sin guardar. ¿Estás seguro de que quieres salir?';
+        return e.returnValue;
+      }
+      return undefined;
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [hasUnsavedChanges]);
 
   const onSubmit = handleSubmit(async (data) => {
     const res = await updateProducto(producto.id, data);
 
     if (res.type === 'error') return toast.error(res.message);
+
+    // Actualizar valores de referencia después de guardar exitosamente
+    initialValuesRef.current = { ...data };
+    setHasUnsavedChanges(false);
 
     handleGetProducto();
 
@@ -223,7 +266,7 @@ export function ProductoEditForm({ producto, handleGetProducto = () => {} }) {
           columnGap={2}
           rowGap={3}
           display="grid"
-          gridTemplateColumns={{ xs: 'repeat(1, 1fr)', md: 'repeat(6, 1fr)' }}
+          gridTemplateColumns={{ xs: 'repeat(1, 1fr)', md: 'repeat(5, 1fr)' }}
         >
           <Field.Select size="small" native name="visible" label="visible *">
             <option value="si">Si</option>
@@ -250,9 +293,21 @@ export function ProductoEditForm({ producto, handleGetProducto = () => {} }) {
         sx={{ px: 2, pb: 2 }}
         direction="row"
         alignItems="center"
-        justifyContent="flex-end"
+        justifyContent="space-between"
         flexWrap="wrap"
       >
+        <Box>
+          {hasUnsavedChanges && (
+            <Chip
+              icon={<Iconify icon="mdi:alert-circle-outline" />}
+              label="Hay cambios sin guardar"
+              color="warning"
+              variant="outlined"
+              size="small"
+            />
+          )}
+        </Box>
+
         <LoadingButton
           type="submit"
           variant="outlined"

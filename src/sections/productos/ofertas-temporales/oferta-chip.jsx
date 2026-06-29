@@ -14,7 +14,7 @@ import { toast } from 'src/components/snackbar';
 
 import DialogEditar from './dialog-editar';
 
-const OfertaChip = ({ oferta, handleGetOfertas, handleGetProducto }) => {
+const OfertaChip = ({ oferta, handleGetOfertas }) => {
   const [anchorEl, setAnchorEl] = useState(null);
   const [openDialogEditar, setOpenDialogEditar] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -38,7 +38,6 @@ const OfertaChip = ({ oferta, handleGetOfertas, handleGetProducto }) => {
     if (res.type === 'error') return toast.error(res.message);
 
     await handleGetOfertas();
-    if (handleGetProducto) await handleGetProducto();
     return toast.success(res.message);
   };
 
@@ -71,7 +70,6 @@ const OfertaChip = ({ oferta, handleGetOfertas, handleGetProducto }) => {
         setOpen={setOpenDialogEditar}
         oferta={oferta}
         handleGetOfertas={handleGetOfertas}
-        handleGetProducto={handleGetProducto}
       />
 
       <Chip

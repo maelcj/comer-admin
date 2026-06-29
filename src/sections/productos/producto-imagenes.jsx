@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 import Card from '@mui/material/Card';
 import Stack from '@mui/material/Stack';
@@ -12,6 +12,7 @@ import CircularProgress from '@mui/material/CircularProgress';
 
 import { CONFIG } from 'src/config-global';
 import {
+  getImagenes,
   subirImagenCarrusel,
   subirImagenPrincipal,
   eliminarImagenCarrusel,
@@ -21,15 +22,29 @@ import { toast } from 'src/components/snackbar';
 import { Iconify } from 'src/components/iconify';
 import { UploadBox } from 'src/components/upload';
 
-const ProductoImagenes = ({ producto, handleGetProducto }) => {
+const ProductoImagenes = ({ producto }) => {
   const [file, setFile] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [imagenes, setImagenes] = useState({ imagenPrincipal: null, images: [] });
 
   const accept = {
     'image/png': ['.jpg', '.jpeg', '.png'],
   };
 
   const timestamp = Date.now();
+
+  const handleGetImagenes = async () => {
+    setIsLoading(true);
+    const res = await getImagenes(producto.id);
+    setIsLoading(false);
+    if (res) {
+      setImagenes(res);
+    }
+  };
+
+  useEffect(() => {
+    handleGetImagenes();
+  }, [producto.id]);
 
   const handleSubirImagenPrincipal = async (acceptedFiles) => {
     setIsLoading(true);
@@ -41,7 +56,7 @@ const ProductoImagenes = ({ producto, handleGetProducto }) => {
     setIsLoading(false);
     if (res.type === 'error') return toast.error(res.message);
 
-    handleGetProducto();
+    handleGetImagenes();
     return toast.success(res.message);
   };
 
@@ -55,7 +70,7 @@ const ProductoImagenes = ({ producto, handleGetProducto }) => {
     setIsLoading(false);
     if (res.type === 'error') return toast.error(res.message);
 
-    handleGetProducto();
+    handleGetImagenes();
     return toast.success(res.message);
   };
 
@@ -65,11 +80,11 @@ const ProductoImagenes = ({ producto, handleGetProducto }) => {
     setIsLoading(false);
     if (res.type === 'error') return toast.error(res.message);
 
-    handleGetProducto();
+    handleGetImagenes();
     return toast.success(res.message);
   };
 
-  const carruselCount = producto?.imagenes?.length || 0;
+  const carruselCount = imagenes?.images?.length || 0;
 
   return (
     <Card sx={{ position: 'relative' }}>
@@ -83,10 +98,10 @@ const ProductoImagenes = ({ producto, handleGetProducto }) => {
       <CardHeader title="Imagen principal" />
 
       <Stack direction="row" spacing={3} sx={{ p: 3 }}>
-        {producto?.imagenPrincipal && (
+        {imagenes?.imagenPrincipal && (
           <Avatar
             alt={producto.name}
-            src={`${CONFIG.site.serverUrl}/${producto.imagenPrincipal.url}?t=${timestamp}`}
+            src={`${CONFIG.site.serverUrl}/${imagenes.imagenPrincipal.url}?t=${timestamp}`}
             variant="rounded"
             sx={{ width: 94, height: 94, mr: 2 }}
           />
@@ -110,9 +125,9 @@ const ProductoImagenes = ({ producto, handleGetProducto }) => {
       <CardHeader title="Imágenes secundarias" />
 
       <Stack direction="row" spacing={1} sx={{ px: 3, pt: 3 }} useFlexGap flexWrap="wrap">
-        {producto &&
-          producto.images &&
-          producto.images.map(
+        {imagenes &&
+          imagenes.images &&
+          imagenes.images.map(
             (image, index) =>
               image.principal === 0 && (
                 <Stack direction="column" key={index} spacing={1}>

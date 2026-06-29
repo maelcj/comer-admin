@@ -29,6 +29,45 @@ export async function getProducto(id) {
     .catch((error) => {});
 }
 
+export async function getImagenes(id) {
+  const url = endpoints.productos.getImagenes;
+
+  return axiosServer()
+    .get(url, {
+      params: {
+        id,
+      },
+    })
+    .then((res) => res.data)
+    .catch((error) => {});
+}
+
+export async function getCampos(id) {
+  const url = endpoints.productos.getCampos;
+
+  return axiosServer()
+    .get(url, {
+      params: {
+        id,
+      },
+    })
+    .then((res) => res.data)
+    .catch((error) => {});
+}
+
+export async function getProductosRelacionadosSimilares(id) {
+  const url = endpoints.productos.getProductosRelacionadosSimilares;
+
+  return axiosServer()
+    .get(url, {
+      params: {
+        id,
+      },
+    })
+    .then((res) => res.data)
+    .catch((error) => {});
+}
+
 export async function updateProducto(id, values) {
   const url = endpoints.productos.updateProducto;
 
@@ -57,13 +96,22 @@ export async function updateProducto(id, values) {
     });
 }
 
-export async function actualizarDescripcion(id, descripcion) {
+export async function actualizarDescripcion(
+  id,
+  descripcion,
+  metaTitle,
+  metaDescription,
+  merchantTitle
+) {
   const url = endpoints.productos.actualizarDescripcion;
 
   return axiosServer()
     .post(url, {
       id,
       descripcion,
+      meta_title: metaTitle,
+      meta_description: metaDescription,
+      merchant_title: merchantTitle,
     })
     .then((res) => {
       const message = {
@@ -183,6 +231,62 @@ export async function actualizarFicha(idProducto, fichaTecnica, camposJson) {
       const message = {
         type: 'success',
         message: 'Ficha actualizada',
+      };
+      return message;
+    })
+    .catch((error) => {
+      const message = {
+        type: 'error',
+        message: error.message
+          ? error.message
+          : error.response
+            ? error
+            : error || 'Algo salió mal!',
+      };
+      return message;
+    });
+}
+
+export async function actualizarFichaDescripcion(idProducto, fichaTecnica) {
+  const url = endpoints.productos.actualizarFichaDescripcion;
+
+  return axiosServer()
+    .post(url, {
+      idProducto,
+      fichaTecnica,
+    })
+    .then((res) => {
+      const message = {
+        type: 'success',
+        message: 'Descripción de ficha actualizada',
+      };
+      return message;
+    })
+    .catch((error) => {
+      const message = {
+        type: 'error',
+        message: error.message
+          ? error.message
+          : error.response
+            ? error
+            : error || 'Algo salió mal!',
+      };
+      return message;
+    });
+}
+
+export async function actualizarFichaCampos(idProducto, camposJson) {
+  const url = endpoints.productos.actualizarFichaCampos;
+
+  return axiosServer()
+    .post(url, {
+      idProducto,
+      camposJson,
+    })
+    .then((res) => {
+      const message = {
+        type: 'success',
+        message: 'Campos de ficha actualizados',
       };
       return message;
     })

@@ -62,7 +62,7 @@ const OfertaTemporalSchema = zod
     }
   );
 
-const DialogEditar = ({ open, setOpen, oferta, handleGetOfertas, handleGetProducto }) => {
+const DialogEditar = ({ open, setOpen, oferta, handleGetOfertas }) => {
   const [isLoading, setIsLoading] = useState(false);
 
   const defaultValues = useMemo(
@@ -146,7 +146,6 @@ const DialogEditar = ({ open, setOpen, oferta, handleGetOfertas, handleGetProduc
 
     toast.success(res.message);
     await handleGetOfertas();
-    if (handleGetProducto) await handleGetProducto();
     setOpen(false);
   });
 

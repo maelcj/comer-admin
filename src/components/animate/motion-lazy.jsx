@@ -8,7 +8,7 @@ const loadFeaturesAsync = async () => import('./features').then((res) => res.def
 
 export function MotionLazy({ children }) {
   return (
-    <LazyMotion strict features={loadFeaturesAsync}>
+    <LazyMotion strict={false} features={loadFeaturesAsync}>
       {children}
     </LazyMotion>
   );
