@@ -118,14 +118,13 @@ export async function subirImagenRefaccionesCategoriaNivel2(id, formData) {
     });
 }
 
-export async function actualizarCategoriaNivel2(id, nombre, singular) {
+export async function actualizarCategoriaNivel2(id, nombre) {
   const url = endpoints.categorias.actualizarCategoriaNivel2;
 
   return axiosServer()
     .post(url, {
       id,
       nombre,
-      singular,
     })
     .then((res) => {
       const message = {
@@ -147,15 +146,13 @@ export async function actualizarCategoriaNivel2(id, nombre, singular) {
     });
 }
 
-export async function actualizarCategoriaNivel3(id, nombre, singular, independiente) {
+export async function actualizarCategoriaNivel3(id, nombre) {
   const url = endpoints.categorias.actualizarCategoriaNivel3;
 
   return axiosServer()
     .post(url, {
       id,
       nombre,
-      singular,
-      independiente,
     })
     .then((res) => {
       const message = {
@@ -287,25 +284,6 @@ export async function registrarCategoriaNivel3(idCategoriasNivel2, nombre) {
     });
 }
 
-export async function getCategoriasPendientes() {
-  const url = endpoints.categorias.getCategoriasPendientes;
-
-  return axiosServer()
-    .get(url)
-    .then((res) => res.data)
-    .catch((error) => {
-      const message = {
-        type: 'error',
-        message: error.message
-          ? error.message
-          : error.response
-            ? error
-            : error || 'Algo salió mal!',
-      };
-      return message;
-    });
-}
-
 export async function getCategoriasNivel1() {
   const url = endpoints.categorias.getCategoriasNivel1;
 
@@ -325,46 +303,12 @@ export async function getCategoriasNivel1() {
     });
 }
 
-export async function registrarCategoriaPendiente(idCategoriaPendiente, idCategoriasNivel1) {
-  const url = endpoints.categorias.registrarCategoriaPendiente;
+export async function getCategoriasArbol() {
+  const url = endpoints.categorias.getCategoriasArbol;
 
   return axiosServer()
-    .post(url, {
-      idCategoriaPendiente,
-      idCategoriasNivel1,
-    })
-    .then((res) => {
-      const message = {
-        type: 'success',
-        message: 'Categoría registrada',
-      };
-      return message;
-    })
-    .catch((error) => {
-      const message = {
-        type: 'error',
-        message: error.message
-          ? error.message
-          : error.response
-            ? error
-            : error || 'Algo salió mal!',
-      };
-      return message;
-    });
-}
-
-export async function ejecutarCategoriasJob() {
-  const url = endpoints.categorias.ejecutarCategoriasJob;
-
-  return axiosServer()
-    .post(url)
-    .then((res) => {
-      const message = {
-        type: 'success',
-        message: res.data.message || 'Job ejecutado correctamente',
-      };
-      return message;
-    })
+    .get(url)
+    .then((res) => res.data)
     .catch((error) => {
       const message = {
         type: 'error',

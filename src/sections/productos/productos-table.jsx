@@ -32,9 +32,15 @@ import { ProductosTableToolbar } from './productos-table-toolbar';
 // ----------------------------------------------------------------------
 
 const STATUS_OPTIONS = [
+  { value: 'visible', label: 'Visible' },
   { value: 'no_visible', label: 'No visible' },
+  { value: 'in_stock', label: 'En stock' },
   { value: 'out_of_stock', label: 'Sin stock' },
 ];
+
+const IMPORTACION_OPTIONS = [{ value: 'importacion', label: 'Importación' }];
+
+const CATEGORIAS_OPTIONS = [{ value: 'menos_de_2', label: 'menos de 2' }];
 
 // ----------------------------------------------------------------------
 
@@ -45,7 +51,7 @@ export function ProductosTable({
   setProductosCarrito,
 }) {
   const router = useRouter();
-  const filters = useSetState({ status: [] });
+  const filters = useSetState({ status: [], importacion: [], categorias: [] });
   const [isLoading, setisLoading] = useState(true);
   const [rows, setRows] = useState([]);
   const [rowsCount, setRowsCount] = useState(0);
@@ -244,7 +250,14 @@ export function ProductosTable({
 function CustomToolbar({ filters }) {
   return (
     <GridToolbarContainer>
-      <ProductosTableToolbar filters={filters} options={{ status: STATUS_OPTIONS }} />
+      <ProductosTableToolbar
+        filters={filters}
+        options={{
+          status: STATUS_OPTIONS,
+          importacion: IMPORTACION_OPTIONS,
+          categorias: CATEGORIAS_OPTIONS,
+        }}
+      />
 
       <GridToolbarQuickFilter
         quickFilterParser={(searchInput) => searchInput.split(',').map((value) => value.trim())}

@@ -5,16 +5,10 @@ import { useState, useEffect, forwardRef } from 'react';
 import { Stack } from '@mui/system';
 import Card from '@mui/material/Card';
 import Chip from '@mui/material/Chip';
-import Menu from '@mui/material/Menu';
-import Avatar from '@mui/material/Avatar';
-import MenuItem from '@mui/material/MenuItem';
 import { styled } from '@mui/material/styles';
 import IconButton from '@mui/material/IconButton';
-import Typography from '@mui/material/Typography';
-import LoadingButton from '@mui/lab/LoadingButton';
 import { RichTreeView } from '@mui/x-tree-view/RichTreeView';
 import { useTreeItem2 } from '@mui/x-tree-view/useTreeItem2';
-import CircularProgress from '@mui/material/CircularProgress';
 import { TreeItem2Icon } from '@mui/x-tree-view/TreeItem2Icon';
 import { TreeItem2Provider } from '@mui/x-tree-view/TreeItem2Provider';
 import {
@@ -28,15 +22,8 @@ import {
 import { paths } from 'src/routes/paths';
 
 import { DashboardContent } from 'src/layouts/dashboard';
-import {
-  getCategorias,
-  getCategoriasNivel1,
-  ejecutarCategoriasJob,
-  getCategoriasPendientes,
-  registrarCategoriaPendiente,
-} from 'src/actions/categorias';
+import { getCategorias, getCategoriasNivel1 } from 'src/actions/categorias';
 
-import { toast } from 'src/components/snackbar';
 import { penIcon, plusIcon } from 'src/components/icons';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
@@ -180,12 +167,7 @@ const CustomTreeItem = forwardRef((props, ref) => {
 
 export function CategoriasView() {
   const [categorias, setCategorias] = useState([]);
-  const [categoriasPendientes, setCategoriasPendientes] = useState([]);
   const [categoriasNivel1, setCategoriasNivel1] = useState([]);
-  const [anchorEl, setAnchorEl] = useState(null);
-  const [selectedPendingCategory, setSelectedPendingCategory] = useState(null);
-  const [isRegistering, setIsRegistering] = useState(false);
-  const [isExecutingJob, setIsExecutingJob] = useState(false);
   const [openEditar2Dialog, setOpenEditar2Dialog] = useState(false);
   const [openEditar3Dialog, setOpenEditar3Dialog] = useState(false);
   const [openRegistrar2Dialog, setOpenRegistrar2Dialog] = useState(false);
@@ -201,66 +183,13 @@ export function CategoriasView() {
     setCategorias(res);
   };
 
-  const fetchCategoriasPendientes = async () => {
-    const res = await getCategoriasPendientes();
-    setCategoriasPendientes(res);
-  };
-
   const fetchCategoriasNivel1 = async () => {
     const res = await getCategoriasNivel1();
     setCategoriasNivel1(res);
   };
 
-  const handleChipClick = (event, categoria) => {
-    setAnchorEl(event.currentTarget);
-    setSelectedPendingCategory(categoria);
-  };
-
-  const handleMenuClose = () => {
-    setAnchorEl(null);
-    setSelectedPendingCategory(null);
-  };
-
-  const handleRegistrarCategoria = async (idCategoriasNivel1) => {
-    setIsRegistering(true);
-    try {
-      const res = await registrarCategoriaPendiente(selectedPendingCategory.id, idCategoriasNivel1);
-      if (res.type === 'success') {
-        toast.success(res.message || 'Categoría registrada exitosamente');
-        await fetchCategoriasPendientes();
-        await fetchCategorias();
-      } else {
-        toast.error(res.message || 'Error al registrar la categoría');
-      }
-    } catch (error) {
-      toast.error('Error al registrar la categoría');
-    } finally {
-      setIsRegistering(false);
-      handleMenuClose();
-    }
-  };
-
-  const handleEjecutarJob = async () => {
-    setIsExecutingJob(true);
-    try {
-      const result = await ejecutarCategoriasJob();
-      if (result.type === 'success') {
-        toast.success(result.message);
-        await fetchCategorias();
-        await fetchCategoriasPendientes();
-      } else {
-        toast.error(result.message);
-      }
-    } catch (error) {
-      toast.error('Error al ejecutar el job');
-    } finally {
-      setIsExecutingJob(false);
-    }
-  };
-
   useEffect(() => {
     fetchCategorias();
-    fetchCategoriasPendientes();
     fetchCategoriasNivel1();
   }, []);
 
@@ -272,26 +201,6 @@ export function CategoriasView() {
         links={[{ name: 'Dashboard', href: paths.dashboard.root }, { name: 'Categorías' }]}
         sx={{ mb: { xs: 3, md: 5 } }}
       />
-
-      {/* <Card sx={{ p: 2, mb: 3, bgcolor: 'primary.darker' }}>
-        <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={2}>
-          <Typography variant="body2">
-            La cantidad de productos y las categorías sugeridas se calculan automáticamente cada
-            noche. Si has realizado cambios recientes, es posible que no se reflejen hasta la
-            próxima actualización.
-          </Typography>
-          <LoadingButton
-            variant="contained"
-            color="primary"
-            onClick={handleEjecutarJob}
-            loading={isExecutingJob}
-            size="small"
-            sx={{ whiteSpace: 'nowrap', width: 200 }}
-          >
-            Actualizar ahora
-          </LoadingButton>
-        </Stack>
-      </Card> */}
 
       <CategoriasEditar2Dialog
         open={openEditar2Dialog}
@@ -342,48 +251,6 @@ export function CategoriasView() {
           }}
         />
       </Card>
-
-      <Card sx={{ p: 3, mt: 3 }}>
-        <Typography variant="h6" sx={{ mb: 2 }}>
-          Categorías sugeridas
-        </Typography>
-        <Stack direction="row" flexWrap="wrap" gap={1}>
-          {categoriasPendientes.map((categoria) => (
-            <Chip
-              key={categoria.id}
-              label={`${categoria.nombre_nivel_2} → ${categoria.nombre_nivel_3}`}
-              color="primary"
-              variant="filled"
-              avatar={<Avatar>{categoria.total_productos}</Avatar>}
-              onClick={(e) => handleChipClick(e, categoria)}
-              sx={{ fontSize: '0.875rem', cursor: 'pointer' }}
-            />
-          ))}
-          {categoriasPendientes.length === 0 && (
-            <Typography variant="body2" color="text.secondary">
-              No hay categorías pendientes
-            </Typography>
-          )}
-        </Stack>
-      </Card>
-
-      <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleMenuClose}>
-        {isRegistering ? (
-          <MenuItem disabled>
-            <CircularProgress size={20} sx={{ mr: 1 }} />
-            Registrando...
-          </MenuItem>
-        ) : (
-          categoriasNivel1.map((categoriaNivel1) => (
-            <MenuItem
-              key={categoriaNivel1.idCategoriasNivel1}
-              onClick={() => handleRegistrarCategoria(categoriaNivel1.idCategoriasNivel1)}
-            >
-              {categoriaNivel1.nombreCategoriaNivel1}
-            </MenuItem>
-          ))
-        )}
-      </Menu>
     </DashboardContent>
   );
 }

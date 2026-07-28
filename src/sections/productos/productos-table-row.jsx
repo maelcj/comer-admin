@@ -39,7 +39,7 @@ export function RenderCellProducto({ params }) {
 
           <ListItemText
             disableTypography
-            primary={params.row.nombre_final}
+            primary={`${params.row.marca} ${params.row.tipo} ${params.row.mpn}`}
             sx={{ display: 'flex', flexDirection: 'column' }}
           />
         </Stack>
@@ -47,7 +47,12 @@ export function RenderCellProducto({ params }) {
       <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
         {params.row.categoriasNivel3.length === 0 && (
           <Label variant="soft" color="error">
-            Sin categoría
+            Sin categorías
+          </Label>
+        )}
+        {params.row.categoriasNivel3.length > 0 && (
+          <Label variant="soft" color="info">
+            {params.row.categoriasNivel3.length} categoría(s)
           </Label>
         )}
         {params.row.visible === 'no' && (

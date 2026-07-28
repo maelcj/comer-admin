@@ -27,6 +27,7 @@ import { copyIcon, arrowRightIcon } from 'src/components/icons';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import ProductoImagenes from '../producto-imagenes';
+import ProductoCategorias from '../producto-categorias';
 import { ProductoEditForm } from '../producto-edit-form';
 import { OfertasTemporales } from '../ofertas-temporales';
 import ProductoDescripcion from '../producto-descripcion';
@@ -100,14 +101,24 @@ export function ProductoEditView({ productoPrev, plantillasPrev }) {
               </Link>
             </Typography>
             {producto.categoriasNivel3.length > 0 ? (
-              <Stack direction={{ xs: 'column', md: 'row' }} spacing={1}>
+              <Stack direction="column" spacing={1}>
                 <Typography variant="body2">Visible en:</Typography>
                 {producto.categoriasNivel3.map((categoria) => (
-                  <Label key={categoria.idCategoriasNivel3} variant="soft" color="primary">
-                    {categoria.categoria_nivel2.categoria_nivel1.nombreCategoriaNivel1} &nbsp;
+                  <Label
+                    key={categoria.categoria_nivel3.idCategoriasNivel3}
+                    variant="soft"
+                    color="primary"
+                    sx={{ width: 'fit-content' }}
+                  >
+                    {
+                      categoria.categoria_nivel3.categoria_nivel2.categoria_nivel1
+                        .nombreCategoriaNivel1
+                    }{' '}
+                    &nbsp;
                     {arrowRightIcon}&nbsp;
-                    {categoria.categoria_nivel2.nombreCategoriaNivel2}&nbsp;{arrowRightIcon}&nbsp;
-                    {categoria.nombreCategoriaNivel3}
+                    {categoria.categoria_nivel3.categoria_nivel2.nombreCategoriaNivel2}&nbsp;
+                    {arrowRightIcon}&nbsp;
+                    {categoria.categoria_nivel3.nombreCategoriaNivel3}
                   </Label>
                 ))}
               </Stack>
@@ -183,6 +194,9 @@ export function ProductoEditView({ productoPrev, plantillasPrev }) {
           </Grid>
           <Grid xs={12} md={6}>
             <OfertasTemporales producto={producto} />
+          </Grid>
+          <Grid xs={12} md={6}>
+            <ProductoCategorias producto={producto} handleGetProducto={handleGetProducto} />
           </Grid>
         </Grid>
       </Box>

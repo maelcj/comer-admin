@@ -34,7 +34,6 @@ export default function CategoriasEditar2Dialog({ open, setOpen, id, fetchCatego
   const [isLoading, setIsLoading] = useState(false);
   const [categoria, setCategoria] = useState(null);
   const [nombre, setNombre] = useState('');
-  const [singular, setSingular] = useState('');
 
   const [file, setFile] = useState(null);
 
@@ -78,12 +77,11 @@ export default function CategoriasEditar2Dialog({ open, setOpen, id, fetchCatego
     const res = await getCategoriaNivel2(id);
     setCategoria(res);
     setNombre(res.nombreCategoriaNivel2);
-    setSingular(res.singular || '');
   };
 
   const handleActializarCategoriaNivel2 = async () => {
     setIsLoading(true);
-    const res = await actualizarCategoriaNivel2(categoria.idCategoriasNivel2, nombre, singular);
+    const res = await actualizarCategoriaNivel2(categoria.idCategoriasNivel2, nombre);
     setIsLoading(false);
     if (res.type === 'error') return toast.error(res.message);
 
@@ -155,15 +153,6 @@ export default function CategoriasEditar2Dialog({ open, setOpen, id, fetchCatego
               setNombre(event.target.value);
             }}
             value={nombre}
-            sx={{ flexGrow: 1 }}
-          />
-          <TextField
-            size="small"
-            label="Singular (si aplica)"
-            onChange={(event) => {
-              setSingular(event.target.value);
-            }}
-            value={singular}
             sx={{ flexGrow: 1 }}
           />
 

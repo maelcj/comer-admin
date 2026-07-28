@@ -122,6 +122,9 @@ export const endpoints = {
     crearOfertaTemporal: '/api/admin/productos/crearOfertaTemporal',
     actualizarOfertaTemporal: '/api/admin/productos/actualizarOfertaTemporal',
     eliminarOfertaTemporal: '/api/admin/productos/eliminarOfertaTemporal',
+    agregarCategoriaNivel3: '/api/admin/productos/agregarCategoriaNivel3',
+    eliminarCategoriaNivel3: '/api/admin/productos/eliminarCategoriaNivel3',
+    getCategoriasProducto: '/api/admin/productos/getCategoriasProducto',
   },
   refacciones: {
     list: '/api/admin/refacciones/getTablaRefacciones',
@@ -253,6 +256,7 @@ export const endpoints = {
     getCategoriasNivel1: '/api/admin/categorias/getCategoriasNivel1',
     registrarCategoriaPendiente: '/api/admin/categorias/registrarCategoriaPendiente',
     ejecutarCategoriasJob: '/api/admin/categorias/ejecutarCategoriasJob',
+    getCategoriasArbol: '/api/admin/categorias/getCategoriasArbol',
   },
   cupones: {
     getCupones: '/api/admin/cupones/getCupones',

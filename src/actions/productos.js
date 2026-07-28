@@ -1100,3 +1100,71 @@ export async function eliminarOfertaTemporal(id) {
       return message;
     });
 }
+
+// ----------------------------------------------------------------------
+
+export async function getCategoriasProducto(id) {
+  const url = endpoints.productos.getCategoriasProducto;
+
+  return axiosServer()
+    .get(url, {
+      params: { id },
+    })
+    .then((res) => res.data)
+    .catch((error) => {});
+}
+
+export async function agregarCategoriaNivel3(id_producto, id_categoria_nivel3) {
+  const url = endpoints.productos.agregarCategoriaNivel3;
+
+  return axiosServer()
+    .post(url, {
+      id_producto,
+      id_categoria_nivel3,
+    })
+    .then((res) => {
+      const message = {
+        type: 'success',
+        message: 'Categoría asignada',
+      };
+      return message;
+    })
+    .catch((error) => {
+      const message = {
+        type: 'error',
+        message: error.message
+          ? error.message
+          : error.response
+            ? error
+            : error || 'Algo salió mal!',
+      };
+      return message;
+    });
+}
+
+export async function eliminarCategoriaNivel3Manual(id) {
+  const url = endpoints.productos.eliminarCategoriaNivel3;
+
+  return axiosServer()
+    .post(url, {
+      id,
+    })
+    .then((res) => {
+      const message = {
+        type: 'success',
+        message: 'Categoría removida',
+      };
+      return message;
+    })
+    .catch((error) => {
+      const message = {
+        type: 'error',
+        message: error.message
+          ? error.message
+          : error.response
+            ? error
+            : error || 'Algo salió mal!',
+      };
+      return message;
+    });
+}
