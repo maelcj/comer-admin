@@ -226,7 +226,7 @@ const CotizacionAcciones = ({ cotizacion, handleGetCotizacion }) => {
                   handleHacerPedido();
                 }}
               >
-                Hacer pedido
+                {cotizacion?.cliente ? 'Hacer pedido' : 'Registrar cliente y hacer pedido'}
               </Button>
             </Stack>
           </Stack>
