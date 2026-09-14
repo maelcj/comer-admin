@@ -45,6 +45,7 @@ export const endpoints = {
   index: {
     getGraficaPedidos: '/api/admin/index/getGraficaPedidos',
     getTotalPedidos: '/api/admin/index/getTotalPedidos',
+    analyticsRealtime: '/api/admin/index/analytics/realtime',
   },
   estadisticas: {
     getTablaEstadisticas: '/api/admin/estadisticas/getTablaEstadisticas',
