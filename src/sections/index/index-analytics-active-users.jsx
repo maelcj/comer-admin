@@ -29,7 +29,11 @@ export default function IndexAnalyticsActiveUsers({ activeUsers, timeline }) {
   const trafficLevel =
     (activeUsers ?? 0) >= 30 ? 'alto' : (activeUsers ?? 0) >= 20 ? 'medio' : 'bajo';
   const trafficColor =
-    (activeUsers ?? 0) >= 30 ? 'success.main' : (activeUsers ?? 0) >= 20 ? 'warning.main' : 'info.main';
+    (activeUsers ?? 0) >= 30
+      ? 'success.main'
+      : (activeUsers ?? 0) >= 20
+        ? 'warning.main'
+        : 'info.main';
 
   // Invertir el array para que el eje X vaya de "hace 29 min" a "ahora"
   const sortedTimeline = useMemo(
@@ -102,12 +106,7 @@ export default function IndexAnalyticsActiveUsers({ activeUsers, timeline }) {
       }}
     >
       {/* Header: contador + badge EN VIVO */}
-      <Stack
-        direction="row"
-        alignItems="center"
-        gap={2}
-        sx={{ p: 3, pb: hasTimeline ? 0 : 3 }}
-      >
+      <Stack direction="row" alignItems="center" gap={2} sx={{ p: 3, pb: hasTimeline ? 0 : 3 }}>
         <Box
           sx={{
             width: 56,
@@ -135,9 +134,6 @@ export default function IndexAnalyticsActiveUsers({ activeUsers, timeline }) {
               Últimos 30 minutos
             </Typography>
             <Box sx={{ width: 4, height: 4, borderRadius: '50%', bgcolor: 'text.disabled' }} />
-            <Typography variant="caption" sx={{ color: trafficColor, fontWeight: 700 }}>
-              Tráfico {trafficLevel}
-            </Typography>
           </Stack>
           <Typography variant="caption" sx={{ color: 'text.disabled' }}>
             Actualizado {formattedTime}
