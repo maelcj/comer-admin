@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
 import * as NProgress from 'nprogress';
+import { useState, useEffect, useCallback } from 'react';
 
 import Tab from '@mui/material/Tab';
 import Tabs from '@mui/material/Tabs';
@@ -18,7 +18,7 @@ import { paths } from 'src/routes/paths';
 import { useRouter } from 'src/routes/hooks';
 
 import { DashboardContent } from 'src/layouts/dashboard';
-import { getProducto, duplicarProducto } from 'src/actions/productos';
+import { getProducto, duplicarProducto, getCategoriasProducto } from 'src/actions/productos';
 
 import { Label } from 'src/components/label';
 import { toast } from 'src/components/snackbar';
@@ -44,6 +44,20 @@ export function ProductoEditView({ productoPrev, plantillasPrev }) {
   const [plantillas, setPlantillas] = useState(plantillasPrev);
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('general');
+
+  const [categoriasProducto, setCategoriasProducto] = useState(productoPrev.categories || []);
+
+  const cargarCategoriasProducto = useCallback(async () => {
+    if (!producto?.id) return;
+    const res = await getCategoriasProducto(producto.id);
+    if (res && !res.type) {
+      setCategoriasProducto(res);
+    }
+  }, [producto?.id]);
+
+  useEffect(() => {
+    cargarCategoriasProducto();
+  }, [cargarCategoriasProducto]);
 
   const handleGetProducto = async () => {
     const res = await getProducto(producto.id);
@@ -100,27 +114,33 @@ export function ProductoEditView({ productoPrev, plantillasPrev }) {
                 {producto.url}
               </Link>
             </Typography>
-            {producto.categoriasNivel3.length > 0 ? (
+            {categoriasProducto.length > 0 ? (
               <Stack direction="column" spacing={1}>
                 <Typography variant="body2">Visible en:</Typography>
-                {producto.categoriasNivel3.map((categoria) => (
-                  <Label
-                    key={categoria.categoria_nivel3.idCategoriasNivel3}
-                    variant="soft"
-                    color="primary"
-                    sx={{ width: 'fit-content' }}
-                  >
-                    {
-                      categoria.categoria_nivel3.categoria_nivel2.categoria_nivel1
-                        .nombreCategoriaNivel1
-                    }{' '}
-                    &nbsp;
-                    {arrowRightIcon}&nbsp;
-                    {categoria.categoria_nivel3.categoria_nivel2.nombreCategoriaNivel2}&nbsp;
-                    {arrowRightIcon}&nbsp;
-                    {categoria.categoria_nivel3.nombreCategoriaNivel3}
-                  </Label>
-                ))}
+                {categoriasProducto.map((categoria) => {
+                  const path = [];
+                  if (categoria.ancestors && categoria.ancestors.length > 0) {
+                    const reversedAncestors = [...categoria.ancestors].reverse();
+                    reversedAncestors.forEach((anc) => path.push(anc.name));
+                  }
+                  path.push(categoria.name);
+
+                  return (
+                    <Label
+                      key={categoria.id}
+                      variant="soft"
+                      color="primary"
+                      sx={{ width: 'fit-content' }}
+                    >
+                      {path.map((name, index) => (
+                        <span key={index} style={{ display: 'flex', alignItems: 'center' }}>
+                          {name}
+                          {index < path.length - 1 && <>&nbsp;{arrowRightIcon}&nbsp;</>}
+                        </span>
+                      ))}
+                    </Label>
+                  );
+                })}
               </Stack>
             ) : (
               <Box>
@@ -196,7 +216,11 @@ export function ProductoEditView({ productoPrev, plantillasPrev }) {
             <OfertasTemporales producto={producto} />
           </Grid>
           <Grid xs={12} md={6}>
-            <ProductoCategorias producto={producto} handleGetProducto={handleGetProducto} />
+            <ProductoCategorias
+              producto={producto}
+              categoriasProducto={categoriasProducto}
+              cargarCategoriasProducto={cargarCategoriasProducto}
+            />
           </Grid>
         </Grid>
       </Box>

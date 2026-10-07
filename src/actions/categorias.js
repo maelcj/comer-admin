@@ -9,279 +9,81 @@ export async function getCategorias(search) {
   const url = endpoints.categorias.getCategorias;
 
   return axiosServer()
-    .post(url, {
-      search,
-    })
+    .post(url, { search })
     .then((res) => res.data)
-    .catch((error) => {
-      const message = {
-        type: 'error',
-        message: error.message
-          ? error.message
-          : error.response
-            ? error
-            : error || 'Algo salió mal!',
-      };
-      return message;
-    });
+    .catch((error) => ({
+      type: 'error',
+      message: error.message || error.response || error || 'Algo salió mal!',
+    }));
 }
 
-export async function getCategoriaNivel2(id) {
-  const url = `${endpoints.categorias.getCategoriaNivel2}?id=${id}`;
+export async function getSubcategorias(parent_id = null) {
+  const url = endpoints.categorias.getSubcategorias;
+
+  return axiosServer()
+    .post(url, { parent_id })
+    .then((res) => res.data)
+    .catch((error) => ({
+      type: 'error',
+      message: error.message || error.response || error || 'Algo salió mal!',
+    }));
+}
+
+export async function getCategoria(id) {
+  const url = `${endpoints.categorias.getCategoria}?id=${id}`;
 
   return axiosServer()
     .get(url)
     .then((res) => res.data)
-    .catch((error) => {
-      const message = {
-        type: 'error',
-        message: error.message
-          ? error.message
-          : error.response
-            ? error
-            : error || 'Algo salió mal!',
-      };
-      return message;
-    });
+    .catch((error) => ({
+      type: 'error',
+      message: error.message || error.response || error || 'Algo salió mal!',
+    }));
 }
 
-export async function getCategoriaNivel3(id) {
-  const url = `${endpoints.categorias.getCategoriaNivel3}?id=${id}`;
+export async function actualizarCategoria(id, nombre, filter_brands) {
+  const url = endpoints.categorias.actualizarCategoria;
 
   return axiosServer()
-    .get(url)
-    .then((res) => res.data)
-    .catch((error) => {
-      const message = {
-        type: 'error',
-        message: error.message
-          ? error.message
-          : error.response
-            ? error
-            : error || 'Algo salió mal!',
-      };
-      return message;
-    });
+    .post(url, { id, nombre, filter_brands })
+    .then((res) => ({
+      type: 'success',
+      message: 'Categoría actualizada',
+    }))
+    .catch((error) => ({
+      type: 'error',
+      message: error.message || error.response || error || 'Algo salió mal!',
+    }));
 }
 
-export async function subirImagenCategoriaNivel2(id, formData) {
-  formData.append('id', id);
-
-  const url = endpoints.categorias.subirImagenCategoriaNivel2;
-
-  return axiosFileServer()
-    .post(url, formData)
-    .then((res) => {
-      const message = {
-        type: 'success',
-        message: 'Imagen subida',
-      };
-      return message;
-    })
-    .catch((error) => {
-      const message = {
-        type: 'error',
-        message: error.message
-          ? error.message
-          : error.response
-            ? error
-            : error || 'Algo salió mal!',
-      };
-      return message;
-    });
-}
-
-export async function subirImagenRefaccionesCategoriaNivel2(id, formData) {
-  formData.append('id', id);
-
-  const url = endpoints.categorias.subirImagenRefaccionesCategoriaNivel2;
-
-  return axiosFileServer()
-    .post(url, formData)
-    .then((res) => {
-      const message = {
-        type: 'success',
-        message: 'Imagen subida',
-      };
-      return message;
-    })
-    .catch((error) => {
-      const message = {
-        type: 'error',
-        message: error.message
-          ? error.message
-          : error.response
-            ? error
-            : error || 'Algo salió mal!',
-      };
-      return message;
-    });
-}
-
-export async function actualizarCategoriaNivel2(id, nombre) {
-  const url = endpoints.categorias.actualizarCategoriaNivel2;
+export async function eliminarCategoria(id) {
+  const url = endpoints.categorias.eliminarCategoria;
 
   return axiosServer()
-    .post(url, {
-      id,
-      nombre,
-    })
-    .then((res) => {
-      const message = {
-        type: 'success',
-        message: 'Categoría actualizada',
-      };
-      return message;
-    })
-    .catch((error) => {
-      const message = {
-        type: 'error',
-        message: error.message
-          ? error.message
-          : error.response
-            ? error
-            : error || 'Algo salió mal!',
-      };
-      return message;
-    });
+    .post(url, { id })
+    .then((res) => ({
+      type: 'success',
+      message: 'Categoría eliminada',
+    }))
+    .catch((error) => ({
+      type: 'error',
+      message: error.response?.data || error.message || 'Algo salió mal!',
+    }));
 }
 
-export async function actualizarCategoriaNivel3(id, nombre) {
-  const url = endpoints.categorias.actualizarCategoriaNivel3;
+export async function registrarCategoria(parent_id, nombre) {
+  const url = endpoints.categorias.registrarCategoria;
 
   return axiosServer()
-    .post(url, {
-      id,
-      nombre,
-    })
-    .then((res) => {
-      const message = {
-        type: 'success',
-        message: 'Categoría actualizada',
-      };
-      return message;
-    })
-    .catch((error) => {
-      const message = {
-        type: 'error',
-        message: error.message
-          ? error.message
-          : error.response
-            ? error
-            : error || 'Algo salió mal!',
-      };
-      return message;
-    });
-}
-
-export async function eliminarCategoriaNivel2(id) {
-  const url = endpoints.categorias.eliminarCategoriaNivel2;
-
-  return axiosServer()
-    .post(url, {
-      id,
-    })
-    .then((res) => {
-      const message = {
-        type: 'success',
-        message: 'Categoría eliminada',
-      };
-      return message;
-    })
-    .catch((error) => {
-      const message = {
-        type: 'error',
-        message: error.message
-          ? error.message
-          : error.response
-            ? error
-            : error || 'Algo salió mal!',
-      };
-      return message;
-    });
-}
-
-export async function eliminarCategoriaNivel3(id) {
-  const url = endpoints.categorias.eliminarCategoriaNivel3;
-
-  return axiosServer()
-    .post(url, {
-      id,
-    })
-    .then((res) => {
-      const message = {
-        type: 'success',
-        message: 'Categoría eliminada',
-      };
-      return message;
-    })
-    .catch((error) => {
-      const message = {
-        type: 'error',
-        message: error.message
-          ? error.message
-          : error.response
-            ? error
-            : error || 'Algo salió mal!',
-      };
-      return message;
-    });
-}
-
-export async function registrarCategoriaNivel2(idCategoriasNivel1, nombre) {
-  const url = endpoints.categorias.registrarCategoriaNivel2;
-
-  return axiosServer()
-    .post(url, {
-      idCategoriasNivel1,
-      nombre,
-    })
-    .then((res) => {
-      const message = {
-        type: 'success',
-        message: 'Categoría registrada',
-      };
-      return message;
-    })
-    .catch((error) => {
-      const message = {
-        type: 'error',
-        message: error.message
-          ? error.message
-          : error.response
-            ? error
-            : error || 'Algo salió mal!',
-      };
-      return message;
-    });
-}
-
-export async function registrarCategoriaNivel3(idCategoriasNivel2, nombre) {
-  const url = endpoints.categorias.registrarCategoriaNivel3;
-
-  return axiosServer()
-    .post(url, {
-      idCategoriasNivel2,
-      nombre,
-    })
-    .then((res) => {
-      const message = {
-        type: 'success',
-        message: 'Categoría registrada',
-      };
-      return message;
-    })
-    .catch((error) => {
-      const message = {
-        type: 'error',
-        message: error.message
-          ? error.message
-          : error.response
-            ? error
-            : error || 'Algo salió mal!',
-      };
-      return message;
-    });
+    .post(url, { parent_id, nombre })
+    .then((res) => ({
+      type: 'success',
+      message: 'Categoría registrada',
+    }))
+    .catch((error) => ({
+      type: 'error',
+      message: error.message || error.response || error || 'Algo salió mal!',
+    }));
 }
 
 export async function getCategoriasNivel1() {
@@ -290,34 +92,8 @@ export async function getCategoriasNivel1() {
   return axiosServer()
     .get(url)
     .then((res) => res.data)
-    .catch((error) => {
-      const message = {
-        type: 'error',
-        message: error.message
-          ? error.message
-          : error.response
-            ? error
-            : error || 'Algo salió mal!',
-      };
-      return message;
-    });
-}
-
-export async function getCategoriasArbol() {
-  const url = endpoints.categorias.getCategoriasArbol;
-
-  return axiosServer()
-    .get(url)
-    .then((res) => res.data)
-    .catch((error) => {
-      const message = {
-        type: 'error',
-        message: error.message
-          ? error.message
-          : error.response
-            ? error
-            : error || 'Algo salió mal!',
-      };
-      return message;
-    });
+    .catch((error) => ({
+      type: 'error',
+      message: error.message || error.response || error || 'Algo salió mal!',
+    }));
 }

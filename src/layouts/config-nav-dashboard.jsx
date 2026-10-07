@@ -247,6 +247,7 @@ const baseNavItems = [
   { title: 'Productos', path: paths.dashboard.productos.root, icon: box },
   { title: 'Refacciones', path: paths.dashboard.refacciones.root, icon: cog },
   { title: 'Categorías', path: paths.dashboard.categorias.root, icon: cat },
+  { title: 'SEO', path: paths.dashboard.seo.root, icon: ICONS.analytics },
   { title: 'Google', path: paths.dashboard.google.root, icon: google },
   { title: 'Ofertas', path: paths.dashboard.ofertas.root, icon: ofertas },
   { title: 'Cupones', path: paths.dashboard.cupones.root, icon: cupon },

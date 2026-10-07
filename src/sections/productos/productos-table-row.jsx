@@ -45,14 +45,14 @@ export function RenderCellProducto({ params }) {
         </Stack>
       </Link>
       <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-        {params.row.categoriasNivel3.length === 0 && (
+        {params.row.categories?.length === 0 && (
           <Label variant="soft" color="error">
             Sin categorías
           </Label>
         )}
-        {params.row.categoriasNivel3.length > 0 && (
+        {params.row.categories?.length > 0 && (
           <Label variant="soft" color="info">
-            {params.row.categoriasNivel3.length} categoría(s)
+            {params.row.categories.length} categoría(s)
           </Label>
         )}
         {params.row.visible === 'no' && (

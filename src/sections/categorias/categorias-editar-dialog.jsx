@@ -1,10 +1,12 @@
 import 'dayjs/locale/es-mx';
 import * as React from 'react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 import Stack from '@mui/material/Stack';
 import Dialog from '@mui/material/Dialog';
+import Button from '@mui/material/Button';
 import Backdrop from '@mui/material/Backdrop';
+import Checkbox from '@mui/material/Checkbox';
 import TextField from '@mui/material/TextField';
 import IconButton from '@mui/material/IconButton';
 import CloseIcon from '@mui/icons-material/Close';
@@ -13,35 +15,54 @@ import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
 import CircularProgress from '@mui/material/CircularProgress';
+import FormControlLabel from '@mui/material/FormControlLabel';
 
-import { registrarCategoriaNivel2 } from 'src/actions/categorias';
+import { getCategoria, eliminarCategoria, actualizarCategoria } from 'src/actions/categorias';
 
 import { toast } from 'src/components/snackbar';
 import { Iconify } from 'src/components/iconify';
 
-export default function CategoriasRegistrar2Dialog({
-  open,
-  setOpen,
-  idCategoriasNivel1,
-  fetchCategorias,
-}) {
+export default function CategoriasEditarDialog({ open, setOpen, id, fetchCategorias }) {
   const [isLoading, setIsLoading] = useState(false);
+  const [categoria, setCategoria] = useState(null);
   const [nombre, setNombre] = useState('');
+  const [filterBrands, setFilterBrands] = useState(false);
 
-  const handleRegistrarCategoriaNivel2 = async () => {
+  const handleGetCategoria = async () => {
+    const res = await getCategoria(id);
+    setCategoria(res);
+    setNombre(res.name); // backend model uses "name"
+    setFilterBrands(Boolean(res.filter_brands));
+  };
+
+  const handleActualizarCategoria = async () => {
     setIsLoading(true);
-    const res = await registrarCategoriaNivel2(idCategoriasNivel1, nombre);
+    const res = await actualizarCategoria(categoria.id, nombre, filterBrands);
     setIsLoading(false);
     if (res.type === 'error') return toast.error(res.message);
 
-    setNombre('');
-
     fetchCategorias();
 
+    return toast.success(res.message);
+  };
+
+  const handleEliminarCategoria = async () => {
+    setIsLoading(true);
+    const res = await eliminarCategoria(categoria.id);
+    setIsLoading(false);
+    if (res.type === 'error') return toast.error(res.message);
+
+    fetchCategorias();
     setOpen(false);
 
     return toast.success(res.message);
   };
+
+  useEffect(() => {
+    if (open && id) {
+      handleGetCategoria();
+    }
+  }, [open, id]);
 
   return (
     <Dialog
@@ -51,7 +72,7 @@ export default function CategoriasRegistrar2Dialog({
       }}
       fullWidth
     >
-      <DialogTitle>Registrar categoría</DialogTitle>
+      <DialogTitle>Editar Categoría &quot;{nombre}&quot;</DialogTitle>
 
       <IconButton
         aria-label="close"
@@ -89,6 +110,16 @@ export default function CategoriasRegistrar2Dialog({
             value={nombre}
             sx={{ flexGrow: 1 }}
           />
+
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={filterBrands}
+                onChange={(event) => setFilterBrands(event.target.checked)}
+              />
+            }
+            label="Habilitar filtro por marcas"
+          />
         </Stack>
       </DialogContent>
 
@@ -100,11 +131,20 @@ export default function CategoriasRegistrar2Dialog({
           loadingPosition="start"
           startIcon={<Iconify icon="fa-solid:check" />}
           onClick={() => {
-            handleRegistrarCategoriaNivel2();
+            handleActualizarCategoria();
           }}
         >
-          Registrar
+          Actualizar
         </LoadingButton>
+        <Button
+          color="error"
+          startIcon={<Iconify icon="solar:trash-bin-trash-bold" />}
+          onClick={() => {
+            handleEliminarCategoria();
+          }}
+        >
+          Eliminar
+        </Button>
       </DialogActions>
     </Dialog>
   );

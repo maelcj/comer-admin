@@ -21,16 +21,14 @@ import {
 
 import { paths } from 'src/routes/paths';
 
+import { getCategorias } from 'src/actions/categorias';
 import { DashboardContent } from 'src/layouts/dashboard';
-import { getCategorias, getCategoriasNivel1 } from 'src/actions/categorias';
 
 import { penIcon, plusIcon } from 'src/components/icons';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
-import CategoriasEditar2Dialog from 'src/sections/categorias/categorias-editar2-dialog';
-import CategoriasEditar3Dialog from 'src/sections/categorias/categorias-editar3-dialog';
-import CategoriasRegistrar2Dialog from 'src/sections/categorias/categorias-registrar2-dialog';
-import CategoriasRegistrar3Dialog from 'src/sections/categorias/categorias-registrar3-dialog';
+import CategoriasEditarDialog from '../categorias-editar-dialog';
+import CategoriasRegistrarDialog from '../categorias-registrar-dialog';
 
 // ----------------------------------------------------------------------
 
@@ -45,14 +43,10 @@ const CustomTreeItem = forwardRef((props, ref) => {
     label,
     disabled,
     children,
-    setOpenEditar2Dialog,
-    setOpenEditar3Dialog,
-    setIdCategoriasNivel2,
-    setIdCategoriasNivel3,
-    setOpenRegistrar2Dialog,
-    setOpenRegistrar3Dialog,
-    setIdCategoriasNivel1Registrar,
-    setIdCategoriasNivel2Registrar,
+    setOpenEditarDialog,
+    setCategoriaId,
+    setOpenRegistrarDialog,
+    setParentIdRegistrar,
     ...other
   } = props;
 
@@ -60,10 +54,8 @@ const CustomTreeItem = forwardRef((props, ref) => {
     getRootProps,
     getContentProps,
     getIconContainerProps,
-    getCheckboxProps,
     getLabelProps,
     getGroupTransitionProps,
-    getDragAndDropOverlayProps,
     status,
     publicAPI,
   } = useTreeItem2({ id, itemId, children, label, disabled, rootRef: ref });
@@ -85,36 +77,19 @@ const CustomTreeItem = forwardRef((props, ref) => {
             sx={{ display: 'flex', gap: 1, alignItems: 'center' }}
           >
             {item.label === 'agregar' ? (
-              <>
-                {item.nivel === 2 && (
-                  <IconButton
-                    size="small"
-                    color="primary"
-                    onClick={() => {
-                      setIdCategoriasNivel1Registrar(item.idCategoriasNivel1);
-                      setOpenRegistrar2Dialog(true);
-                    }}
-                  >
-                    {plusIcon}
-                  </IconButton>
-                )}
-
-                {item.nivel === 3 && (
-                  <IconButton
-                    size="small"
-                    color="primary"
-                    onClick={() => {
-                      setIdCategoriasNivel2Registrar(item.idCategoriasNivel2);
-                      setOpenRegistrar3Dialog(true);
-                    }}
-                  >
-                    {plusIcon}
-                  </IconButton>
-                )}
-              </>
+              <IconButton
+                size="small"
+                color="primary"
+                onClick={() => {
+                  setParentIdRegistrar(item.parentId);
+                  setOpenRegistrarDialog(true);
+                }}
+              >
+                {plusIcon}
+              </IconButton>
             ) : (
               <>
-                {item.nivel === 3 && item.total_productos !== undefined ? (
+                {item.total_productos !== undefined && item.total_productos > 0 ? (
                   <>
                     <Chip
                       label={item.total_productos}
@@ -128,33 +103,17 @@ const CustomTreeItem = forwardRef((props, ref) => {
                   <TreeItem2Label {...getLabelProps()} />
                 )}
 
-                {item.nivel === 2 && (
-                  <IconButton
-                    size="small"
-                    color="warning"
-                    onClick={() => {
-                      setOpenEditar2Dialog(true);
-                      setIdCategoriasNivel2(item.idCategoriasNivel2);
-                    }}
-                    sx={{ p: 0, height: '15px' }}
-                  >
-                    {penIcon}
-                  </IconButton>
-                )}
-
-                {item.nivel === 3 && (
-                  <IconButton
-                    size="small"
-                    color="warning"
-                    onClick={() => {
-                      setOpenEditar3Dialog(true);
-                      setIdCategoriasNivel3(item.idCategoriasNivel3);
-                    }}
-                    sx={{ p: 0, height: '15px' }}
-                  >
-                    {penIcon}
-                  </IconButton>
-                )}
+                <IconButton
+                  size="small"
+                  color="warning"
+                  onClick={() => {
+                    setOpenEditarDialog(true);
+                    setCategoriaId(item.categoryId);
+                  }}
+                  sx={{ p: 0, height: '15px' }}
+                >
+                  {penIcon}
+                </IconButton>
               </>
             )}
           </Stack>
@@ -167,30 +126,20 @@ const CustomTreeItem = forwardRef((props, ref) => {
 
 export function CategoriasView() {
   const [categorias, setCategorias] = useState([]);
-  const [categoriasNivel1, setCategoriasNivel1] = useState([]);
-  const [openEditar2Dialog, setOpenEditar2Dialog] = useState(false);
-  const [openEditar3Dialog, setOpenEditar3Dialog] = useState(false);
-  const [openRegistrar2Dialog, setOpenRegistrar2Dialog] = useState(false);
-  const [openRegistrar3Dialog, setOpenRegistrar3Dialog] = useState(false);
-  const [idCategoriasNivel2, setIdCategoriasNivel2] = useState(null);
-  const [idCategoriasNivel3, setIdCategoriasNivel3] = useState(null);
-  const [idCategoriasNivel1Registrar, setIdCategoriasNivel1Registrar] = useState(null);
-  const [idCategoriasNivel2Registrar, setIdCategoriasNivel2Registrar] = useState(null);
+
+  const [openEditarDialog, setOpenEditarDialog] = useState(false);
+  const [openRegistrarDialog, setOpenRegistrarDialog] = useState(false);
+
+  const [categoriaId, setCategoriaId] = useState(null);
+  const [parentIdRegistrar, setParentIdRegistrar] = useState(null);
 
   const fetchCategorias = async () => {
     const res = await getCategorias('');
-    console.log(res);
     setCategorias(res);
-  };
-
-  const fetchCategoriasNivel1 = async () => {
-    const res = await getCategoriasNivel1();
-    setCategoriasNivel1(res);
   };
 
   useEffect(() => {
     fetchCategorias();
-    fetchCategoriasNivel1();
   }, []);
 
   return (
@@ -202,50 +151,32 @@ export function CategoriasView() {
         sx={{ mb: { xs: 3, md: 5 } }}
       />
 
-      <CategoriasEditar2Dialog
-        open={openEditar2Dialog}
-        setOpen={setOpenEditar2Dialog}
-        id={idCategoriasNivel2}
+      <CategoriasEditarDialog
+        open={openEditarDialog}
+        setOpen={setOpenEditarDialog}
+        id={categoriaId}
         fetchCategorias={fetchCategorias}
       />
 
-      <CategoriasEditar3Dialog
-        open={openEditar3Dialog}
-        setOpen={setOpenEditar3Dialog}
-        id={idCategoriasNivel3}
-        fetchCategorias={fetchCategorias}
-      />
-
-      <CategoriasRegistrar2Dialog
-        open={openRegistrar2Dialog}
-        setOpen={setOpenRegistrar2Dialog}
-        idCategoriasNivel1={idCategoriasNivel1Registrar}
-        fetchCategorias={fetchCategorias}
-      />
-
-      <CategoriasRegistrar3Dialog
-        open={openRegistrar3Dialog}
-        setOpen={setOpenRegistrar3Dialog}
-        idCategoriasNivel2={idCategoriasNivel2Registrar}
+      <CategoriasRegistrarDialog
+        open={openRegistrarDialog}
+        setOpen={setOpenRegistrarDialog}
+        parentId={parentIdRegistrar}
         fetchCategorias={fetchCategorias}
       />
 
       <Card sx={{ p: 3 }}>
         <RichTreeView
-          defaultExpandedItems={['3']}
+          defaultExpandedItems={['add-root']}
           items={categorias}
           slots={{
             item: (props) => (
               <CustomTreeItem
                 {...props}
-                setOpenEditar2Dialog={setOpenEditar2Dialog}
-                setOpenEditar3Dialog={setOpenEditar3Dialog}
-                setIdCategoriasNivel2={setIdCategoriasNivel2}
-                setIdCategoriasNivel3={setIdCategoriasNivel3}
-                setOpenRegistrar2Dialog={setOpenRegistrar2Dialog}
-                setOpenRegistrar3Dialog={setOpenRegistrar3Dialog}
-                setIdCategoriasNivel1Registrar={setIdCategoriasNivel1Registrar}
-                setIdCategoriasNivel2Registrar={setIdCategoriasNivel2Registrar}
+                setOpenEditarDialog={setOpenEditarDialog}
+                setCategoriaId={setCategoriaId}
+                setOpenRegistrarDialog={setOpenRegistrarDialog}
+                setParentIdRegistrar={setParentIdRegistrar}
               />
             ),
           }}

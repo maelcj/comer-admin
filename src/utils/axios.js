@@ -123,8 +123,8 @@ export const endpoints = {
     crearOfertaTemporal: '/api/admin/productos/crearOfertaTemporal',
     actualizarOfertaTemporal: '/api/admin/productos/actualizarOfertaTemporal',
     eliminarOfertaTemporal: '/api/admin/productos/eliminarOfertaTemporal',
-    agregarCategoriaNivel3: '/api/admin/productos/agregarCategoriaNivel3',
-    eliminarCategoriaNivel3: '/api/admin/productos/eliminarCategoriaNivel3',
+    agregarCategoriaProducto: '/api/admin/productos/agregarCategoriaProducto',
+    eliminarCategoriaProducto: '/api/admin/productos/eliminarCategoriaProducto',
     getCategoriasProducto: '/api/admin/productos/getCategoriasProducto',
   },
   refacciones: {
@@ -242,17 +242,12 @@ export const endpoints = {
 
   categorias: {
     getCategorias: '/api/admin/categorias/getCategorias',
-    getCategoriaNivel2: '/api/admin/categorias/getCategoriaNivel2',
-    subirImagenCategoriaNivel2: '/api/admin/categorias/subirImagenCategoriaNivel2',
-    subirImagenRefaccionesCategoriaNivel2:
-      '/api/admin/categorias/subirImagenRefaccionesCategoriaNivel2',
-    actualizarCategoriaNivel2: '/api/admin/categorias/actualizarCategoriaNivel2',
-    actualizarCategoriaNivel3: '/api/admin/categorias/actualizarCategoriaNivel3',
-    eliminarCategoriaNivel2: '/api/admin/categorias/eliminarCategoriaNivel2',
-    eliminarCategoriaNivel3: '/api/admin/categorias/eliminarCategoriaNivel3',
-    registrarCategoriaNivel2: '/api/admin/categorias/registrarCategoriaNivel2',
-    registrarCategoriaNivel3: '/api/admin/categorias/registrarCategoriaNivel3',
-    getCategoriaNivel3: '/api/admin/categorias/getCategoriaNivel3',
+    getSubcategorias: '/api/admin/categorias/getSubcategorias',
+    getCategoria: '/api/admin/categorias/getCategoria',
+    actualizarCategoria: '/api/admin/categorias/actualizarCategoria',
+    eliminarCategoria: '/api/admin/categorias/eliminarCategoria',
+    registrarCategoria: '/api/admin/categorias/registrarCategoria',
+    // Compatibilidad temporal
     getCategoriasPendientes: '/api/admin/categorias/getCategoriasPendientes',
     getCategoriasNivel1: '/api/admin/categorias/getCategoriasNivel1',
     registrarCategoriaPendiente: '/api/admin/categorias/registrarCategoriaPendiente',

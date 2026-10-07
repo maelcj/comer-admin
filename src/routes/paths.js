@@ -81,6 +81,9 @@ export const paths = {
     categorias: {
       root: `${ROOTS.DASHBOARD}/categorias`,
     },
+    seo: {
+      root: `${ROOTS.DASHBOARD}/seo`,
+    },
     ofertas: {
       root: `${ROOTS.DASHBOARD}/ofertas`,
     },

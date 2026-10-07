@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, Fragment, useEffect, useCallback } from 'react';
 
 import Card from '@mui/material/Card';
 import Stack from '@mui/material/Stack';
@@ -11,76 +11,68 @@ import InputLabel from '@mui/material/InputLabel';
 import LoadingButton from '@mui/lab/LoadingButton';
 import FormControl from '@mui/material/FormControl';
 
-import { getCategoriasArbol } from 'src/actions/categorias';
-import {
-  getCategoriasProducto,
-  agregarCategoriaNivel3,
-  eliminarCategoriaNivel3Manual,
-} from 'src/actions/productos';
+import { getSubcategorias } from 'src/actions/categorias';
+import { agregarCategoriaProducto, eliminarCategoriaProducto } from 'src/actions/productos';
 
 import { Label } from 'src/components/label';
 import { toast } from 'src/components/snackbar';
 import { trashIcon, arrowRightIcon } from 'src/components/icons';
 
-const ProductoCategorias = ({ producto }) => {
-  const [categorias, setCategorias] = useState([]);
-  const [categoriasProducto, setCategoriasProducto] = useState([]);
-  const [selectedNivel1, setSelectedNivel1] = useState('');
-  const [selectedNivel2, setSelectedNivel2] = useState('');
-  const [selectedNivel3, setSelectedNivel3] = useState('');
+const ProductoCategorias = ({ producto, categoriasProducto, cargarCategoriasProducto }) => {
+  // Array de arrays de opciones, ej: [ [raíces], [hijos de N1], [hijos de N2] ]
+  const [categoryLevels, setCategoryLevels] = useState([]);
+  // Array de IDs seleccionados en cada nivel
+  const [selectedPath, setSelectedPath] = useState([]);
+
   const [isLoading, setIsLoading] = useState(false);
 
-  const cargarCategorias = useCallback(async () => {
-    const res = await getCategoriasArbol();
+  // Cargar raíces al inicio
+  const cargarRaices = useCallback(async () => {
+    const res = await getSubcategorias(null);
     if (res && !res.type) {
-      setCategorias(res);
+      setCategoryLevels([res]);
     }
   }, []);
 
-  const cargarCategoriasProducto = useCallback(async () => {
-    if (!producto?.id) return;
-    const res = await getCategoriasProducto(producto.id);
-    if (res && !res.type) {
-      setCategoriasProducto(res);
+  useEffect(() => {
+    cargarRaices();
+  }, [cargarRaices]);
+
+  // Manejar el cambio en un nivel específico
+  const handleChangeLevel = async (levelIndex, categoryId) => {
+    // Cortar los paths seleccionados hasta este nivel
+    const newSelectedPath = selectedPath.slice(0, levelIndex);
+    newSelectedPath[levelIndex] = categoryId;
+    setSelectedPath(newSelectedPath);
+
+    // Cortar las opciones de subniveles (borrar los de más abajo)
+    const newCategoryLevels = categoryLevels.slice(0, levelIndex + 1);
+    setCategoryLevels(newCategoryLevels);
+
+    if (categoryId) {
+      setIsLoading(true);
+      // Obtener hijos
+      const hijos = await getSubcategorias(categoryId);
+      setIsLoading(false);
+
+      if (hijos && !hijos.type && hijos.length > 0) {
+        // Añadir el nuevo nivel de opciones
+        setCategoryLevels([...newCategoryLevels, hijos]);
+      }
     }
-  }, [producto?.id]);
-
-  useEffect(() => {
-    cargarCategorias();
-  }, [cargarCategorias]);
-
-  useEffect(() => {
-    cargarCategoriasProducto();
-  }, [cargarCategoriasProducto]);
-
-  // Obtener opciones de nivel 2 basado en selección de nivel 1
-  const opcionesNivel2 =
-    categorias.find((c) => c.idCategoriasNivel1 === selectedNivel1)?.categorias_nivel2 || [];
-
-  // Obtener opciones de nivel 3 basado en selección de nivel 2
-  const opcionesNivel3 =
-    opcionesNivel2.find((c) => c.idCategoriasNivel2 === selectedNivel2)?.categorias_nivel3 || [];
-
-  const handleChangeNivel1 = (e) => {
-    setSelectedNivel1(e.target.value);
-    setSelectedNivel2('');
-    setSelectedNivel3('');
-  };
-
-  const handleChangeNivel2 = (e) => {
-    setSelectedNivel2(e.target.value);
-    setSelectedNivel3('');
-  };
-
-  const handleChangeNivel3 = (e) => {
-    setSelectedNivel3(e.target.value);
   };
 
   const handleAgregar = async () => {
-    if (!selectedNivel3) return;
+    // Validar que al menos haya un nivel seleccionado
+    if (selectedPath.length === 0) return;
+
+    // Obtener la categoría del nivel más profundo seleccionado
+    const selectedCategoriaId = selectedPath[selectedPath.length - 1];
+
+    if (!selectedCategoriaId) return;
 
     setIsLoading(true);
-    const res = await agregarCategoriaNivel3(producto.id, selectedNivel3);
+    const res = await agregarCategoriaProducto(producto.id, selectedCategoriaId);
     setIsLoading(false);
 
     if (res.type === 'error') {
@@ -89,15 +81,16 @@ const ProductoCategorias = ({ producto }) => {
     }
 
     toast.success(res.message);
-    setSelectedNivel1('');
-    setSelectedNivel2('');
-    setSelectedNivel3('');
+
+    // Resetear selección
+    setSelectedPath([]);
+    setCategoryLevels([categoryLevels[0]]); // dejar solo las raíces
     await cargarCategoriasProducto();
   };
 
-  const handleEliminar = async (id) => {
+  const handleEliminar = async (categoryId) => {
     setIsLoading(true);
-    const res = await eliminarCategoriaNivel3Manual(id);
+    const res = await eliminarCategoriaProducto(producto.id, categoryId);
     setIsLoading(false);
 
     if (res.type === 'error') {
@@ -107,6 +100,33 @@ const ProductoCategorias = ({ producto }) => {
 
     toast.success(res.message);
     await cargarCategoriasProducto();
+  };
+
+  // Renderizar breadcrumb basado en ancestros para un registro de categoría de producto
+  const renderBreadcrumb = (categoria) => {
+    // En la nueva estructura, el backend devuelve category_product con el modelo Category y la relación ancestors
+    // Asumimos que `categoria` es un modelo Category devuelto por getCategoriasProducto, que incluye sus ancestros.
+    const path = [];
+    if (categoria.ancestors && categoria.ancestors.length > 0) {
+      // Los ancestros vienen del más alto (raíz) al más cercano (padre), si se ordenaron bien, o puede que necesite reversarse.
+      // Laravel Adjacency List por defecto devuelve ancestors de padre hacia raíz. Invertimos para el breadcrumb.
+      const reversedAncestors = [...categoria.ancestors].reverse();
+      reversedAncestors.forEach((anc) => {
+        path.push(anc.name);
+      });
+    }
+    path.push(categoria.name);
+
+    return (
+      <Label variant="soft" color="info" sx={{ flex: 1, justifyContent: 'flex-start' }}>
+        {path.map((name, index) => (
+          <Fragment key={index}>
+            {name}
+            {index < path.length - 1 && <>&nbsp;{arrowRightIcon}&nbsp;</>}
+          </Fragment>
+        ))}
+      </Label>
+    );
   };
 
   return (
@@ -115,47 +135,31 @@ const ProductoCategorias = ({ producto }) => {
       <Divider />
 
       <Stack spacing={2} sx={{ p: 3 }}>
-        {/* Selects en cascada */}
-        <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
-          <FormControl fullWidth size="small">
-            <InputLabel>Nivel 1</InputLabel>
-            <Select value={selectedNivel1} label="Nivel 1" onChange={handleChangeNivel1}>
-              {categorias.map((cat) => (
-                <MenuItem key={cat.idCategoriasNivel1} value={cat.idCategoriasNivel1}>
-                  {cat.nombreCategoriaNivel1}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-
-          <FormControl fullWidth size="small" disabled={!selectedNivel1}>
-            <InputLabel>Nivel 2</InputLabel>
-            <Select value={selectedNivel2} label="Nivel 2" onChange={handleChangeNivel2}>
-              {opcionesNivel2.map((cat) => (
-                <MenuItem key={cat.idCategoriasNivel2} value={cat.idCategoriasNivel2}>
-                  {cat.nombreCategoriaNivel2}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-
-          <FormControl fullWidth size="small" disabled={!selectedNivel2}>
-            <InputLabel>Nivel 3</InputLabel>
-            <Select value={selectedNivel3} label="Nivel 3" onChange={handleChangeNivel3}>
-              {opcionesNivel3.map((cat) => (
-                <MenuItem key={cat.idCategoriasNivel3} value={cat.idCategoriasNivel3}>
-                  {cat.nombreCategoriaNivel3}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+        {/* Selects dinámicos basados en la profundidad */}
+        <Stack direction="column" spacing={2}>
+          {categoryLevels.map((options, index) => (
+            <FormControl key={`level-${index}`} size="small" fullWidth>
+              <InputLabel>Nivel {index + 1}</InputLabel>
+              <Select
+                value={selectedPath[index] || ''}
+                label={`Nivel ${index + 1}`}
+                onChange={(e) => handleChangeLevel(index, e.target.value)}
+              >
+                {options.map((cat) => (
+                  <MenuItem key={cat.id} value={cat.id}>
+                    {cat.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          ))}
         </Stack>
 
         <LoadingButton
           variant="contained"
           color="primary"
           size="small"
-          disabled={!selectedNivel3}
+          disabled={selectedPath.length === 0}
           loading={isLoading}
           onClick={handleAgregar}
           sx={{ alignSelf: 'flex-start' }}
@@ -169,22 +173,15 @@ const ProductoCategorias = ({ producto }) => {
             <Divider />
             <Typography variant="subtitle2">Categorías asignadas</Typography>
             <Stack spacing={1}>
-              {categoriasProducto.map((registro) => (
-                <Stack key={registro.id} direction="row" alignItems="center" spacing={1}>
-                  <Label variant="soft" color="info" sx={{ flex: 1, justifyContent: 'flex-start' }}>
-                    {registro.categoria_nivel3?.categoria_nivel2?.categoria_nivel1
-                      ?.nombreCategoriaNivel1 || '—'}
-                    &nbsp;{arrowRightIcon}&nbsp;
-                    {registro.categoria_nivel3?.categoria_nivel2?.nombreCategoriaNivel2 || '—'}
-                    &nbsp;{arrowRightIcon}&nbsp;
-                    {registro.categoria_nivel3?.nombreCategoriaNivel3 || '—'}
-                  </Label>
+              {categoriasProducto.map((categoria) => (
+                <Stack key={categoria.id} direction="row" alignItems="center" spacing={1}>
+                  {renderBreadcrumb(categoria)}
                   <LoadingButton
                     variant="soft"
                     color="error"
                     size="small"
                     loading={isLoading}
-                    onClick={() => handleEliminar(registro.id)}
+                    onClick={() => handleEliminar(categoria.id)}
                     sx={{ minWidth: 'auto', px: 1 }}
                   >
                     {trashIcon}

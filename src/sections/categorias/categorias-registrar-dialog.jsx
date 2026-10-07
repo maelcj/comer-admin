@@ -14,30 +14,24 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
 import CircularProgress from '@mui/material/CircularProgress';
 
-import { registrarCategoriaNivel3 } from 'src/actions/categorias';
+import { registrarCategoria } from 'src/actions/categorias';
 
 import { toast } from 'src/components/snackbar';
 import { Iconify } from 'src/components/iconify';
 
-export default function CategoriasRegistrar3Dialog({
-  open,
-  setOpen,
-  idCategoriasNivel2,
-  fetchCategorias,
-}) {
+export default function CategoriasRegistrarDialog({ open, setOpen, parentId, fetchCategorias }) {
   const [isLoading, setIsLoading] = useState(false);
   const [nombre, setNombre] = useState('');
 
-  const handleRegistrarCategoriaNivel3 = async () => {
+  const handleRegistrarCategoria = async () => {
     setIsLoading(true);
-    const res = await registrarCategoriaNivel3(idCategoriasNivel2, nombre);
+    const res = await registrarCategoria(parentId, nombre);
     setIsLoading(false);
+
     if (res.type === 'error') return toast.error(res.message);
 
     setNombre('');
-
     fetchCategorias();
-
     setOpen(false);
 
     return toast.success(res.message);
@@ -79,7 +73,6 @@ export default function CategoriasRegistrar3Dialog({
         >
           <CircularProgress color="inherit" />
         </Backdrop>
-
         <Stack direction="column" gap={2} useFlexGap flexWrap="wrap">
           <TextField
             size="small"
@@ -101,7 +94,7 @@ export default function CategoriasRegistrar3Dialog({
           loadingPosition="start"
           startIcon={<Iconify icon="fa-solid:check" />}
           onClick={() => {
-            handleRegistrarCategoriaNivel3();
+            handleRegistrarCategoria();
           }}
         >
           Registrar

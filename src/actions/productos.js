@@ -1114,13 +1114,13 @@ export async function getCategoriasProducto(id) {
     .catch((error) => {});
 }
 
-export async function agregarCategoriaNivel3(id_producto, id_categoria_nivel3) {
-  const url = endpoints.productos.agregarCategoriaNivel3;
+export async function agregarCategoriaProducto(id_producto, id_categoria) {
+  const url = endpoints.productos.agregarCategoriaProducto;
 
   return axiosServer()
     .post(url, {
       id_producto,
-      id_categoria_nivel3,
+      id_categoria,
     })
     .then((res) => {
       const message = {
@@ -1142,12 +1142,13 @@ export async function agregarCategoriaNivel3(id_producto, id_categoria_nivel3) {
     });
 }
 
-export async function eliminarCategoriaNivel3Manual(id) {
-  const url = endpoints.productos.eliminarCategoriaNivel3;
+export async function eliminarCategoriaProducto(id_producto, id_categoria) {
+  const url = endpoints.productos.eliminarCategoriaProducto;
 
   return axiosServer()
     .post(url, {
-      id,
+      id_producto,
+      id_categoria,
     })
     .then((res) => {
       const message = {
