@@ -127,6 +127,15 @@ export const endpoints = {
     eliminarCategoriaProducto: '/api/admin/productos/eliminarCategoriaProducto',
     getCategoriasProducto: '/api/admin/productos/getCategoriasProducto',
   },
+  precios: {
+    getTablaPrecios: '/api/admin/precios/getTablaPrecios',
+    getResumenPrecios: '/api/admin/precios/getResumenPrecios',
+    getTablaCompetidores: '/api/admin/precios/getTablaCompetidores',
+    agregarCompetidorUrl: '/api/admin/precios/agregarCompetidorUrl',
+    eliminarCompetidorUrl: '/api/admin/precios/eliminarCompetidorUrl',
+    importarMatches: '/api/admin/precios/importarMatches',
+    exportarJson: '/api/admin/precios/exportarJson',
+  },
   refacciones: {
     list: '/api/admin/refacciones/getTablaRefacciones',
     getRefaccion: '/api/admin/refacciones/getRefaccion',

@@ -48,6 +48,9 @@ export const paths = {
       edit: (id) => `${ROOTS.DASHBOARD}/productos/${id}`,
       create: `${ROOTS.DASHBOARD}/productos/create`,
     },
+    precios: {
+      root: `${ROOTS.DASHBOARD}/precios`,
+    },
     refacciones: {
       root: `${ROOTS.DASHBOARD}/refacciones`,
       edit: (id) => `${ROOTS.DASHBOARD}/refacciones/${id}`,
