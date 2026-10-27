@@ -76,8 +76,15 @@ const IndexPedidos = () => {
 
   return (
     <>
-      <Stack>
-        <Stack flexGrow={1} direction="row" alignItems="center" justifyContent="flex-end">
+      <Stack sx={{ mb: 1 }}>
+        <Stack
+          flexGrow={1}
+          direction="row"
+          alignItems="center"
+          justifyContent={{ xs: 'center', sm: 'flex-end' }}
+          flexWrap="wrap"
+          gap={1}
+        >
           <LocalizationProvider
             dateAdapter={AdapterDayjs}
             adapterLocale="es-mx"
@@ -104,7 +111,7 @@ const IndexPedidos = () => {
               }}
               color="primary"
               variant="outlined"
-              sx={{ ml: 1 }}
+              sx={{ ml: { xs: 0, sm: 1 } }}
             >
               Aplicar
             </Button>
@@ -112,7 +119,7 @@ const IndexPedidos = () => {
         </Stack>
       </Stack>
 
-      <Card sx={{ mt: 2, p: 2 }}>
+      <Card sx={{ mt: 2, p: 2, overflow: 'hidden' }}>
         <Backdrop
           open={isLoading}
           sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1, position: 'absolute' }}
@@ -120,12 +127,12 @@ const IndexPedidos = () => {
           <CircularProgress color="inherit" />
         </Backdrop>
         <Grid container spacing={2}>
-          <Grid xs={12} md={6}>
+          <Grid xs={12} lg={6} sx={{ minWidth: 0 }}>
             {grafica && grafica.data && (
               <GraficaPedidos grafica={grafica} totalPedidos={totalPedidos} />
             )}
           </Grid>
-          <Grid xs={12} md={6}>
+          <Grid xs={12} lg={6} sx={{ minWidth: 0 }}>
             <TablaPedidos
               ref={tablaPedidosRef}
               fechaInicio={fechaInicio.format('YYYY-MM-DD')}

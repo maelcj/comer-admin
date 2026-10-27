@@ -11,7 +11,7 @@ import { FormPago } from './pedido-form-pago';
 export function TabPagos({ pedido, handleGetPedido }) {
   return (
     <>
-      <Grid xs={12} md={6}>
+      <Grid xs={12} md={6} sx={{ minWidth: 0 }}>
         <Card>
           <Box sx={{ p: 2 }}>
             <Typography variant="h6" sx={{ color: 'text.disabled', mb: 3 }}>
@@ -21,7 +21,7 @@ export function TabPagos({ pedido, handleGetPedido }) {
           </Box>
         </Card>
       </Grid>
-      <Grid xs={12} md={6}>
+      <Grid xs={12} md={6} sx={{ minWidth: 0 }}>
         <Pagos pedido={pedido} handleGetPedido={handleGetPedido} />
       </Grid>
     </>

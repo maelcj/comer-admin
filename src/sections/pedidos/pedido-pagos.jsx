@@ -12,12 +12,14 @@ import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
 import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
+import TableContainer from '@mui/material/TableContainer';
 import CircularProgress from '@mui/material/CircularProgress';
 
 import { eliminarPago } from 'src/actions/pedidos';
 
 import { toast } from 'src/components/snackbar';
 import { Iconify } from 'src/components/iconify';
+import { Scrollbar } from 'src/components/scrollbar';
 import { TableHeadCustom } from 'src/components/table';
 
 const TABLE_HEAD = [
@@ -25,7 +27,7 @@ const TABLE_HEAD = [
   { id: 'fecha', label: 'Fecha', width: 50 },
   { id: 'banco', label: 'Banco', width: 50 },
   { id: 'forma', label: 'Forma', width: 50 },
-  { id: 'acciones', label: '', width: 50 },
+  { id: 'acciones', label: '', width: 50, align: 'right' },
 ];
 
 const Pagos = ({ pedido, handleGetPedido }) => {
@@ -54,46 +56,54 @@ const Pagos = ({ pedido, handleGetPedido }) => {
           Pagos:
         </Typography>
       </Box>
-      <Table size="small">
-        <TableHeadCustom headLabel={TABLE_HEAD} />
-        <TableBody>
-          {pedido?.pagos.map((pago) => (
-            <TableRow hover key={pago.id}>
-              <TableCell>
-                {new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(
-                  pago.cantidad
-                )}
-              </TableCell>
-              <TableCell>{new Date(pago.created_at).toLocaleDateString()}</TableCell>
-              <TableCell>{pago.banco}</TableCell>
-              <TableCell>{pago.forma}</TableCell>
-              <TableCell>
-                <Tooltip title="Eliminar" placement="top" arrow>
-                  <IconButton
-                    size="small"
-                    color="error"
-                    onClick={() => handleEliminarPago(pago.id)}
-                  >
-                    <Iconify icon="fa-regular:trash-alt" />
-                  </IconButton>
-                </Tooltip>
-              </TableCell>
-            </TableRow>
-          ))}
-          {pedido?.pagos.length === 0 && (
-            <TableRow>
-              <TableCell colSpan={12}>
-                <Box sx={{ display: 'flex', justifyContent: 'center', py: 1 }}>Sin registros</Box>
-              </TableCell>
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
+      <TableContainer sx={{ position: 'relative', overflow: 'unset' }}>
+        <Scrollbar>
+          <Table size="small" sx={{ minWidth: 520 }}>
+            <TableHeadCustom headLabel={TABLE_HEAD} />
+            <TableBody>
+              {pedido?.pagos.map((pago) => (
+                <TableRow hover key={pago.id}>
+                  <TableCell sx={{ whiteSpace: 'nowrap' }}>
+                    {new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(
+                      pago.cantidad
+                    )}
+                  </TableCell>
+                  <TableCell sx={{ whiteSpace: 'nowrap' }}>
+                    {new Date(pago.created_at).toLocaleDateString()}
+                  </TableCell>
+                  <TableCell sx={{ whiteSpace: 'nowrap' }}>{pago.banco}</TableCell>
+                  <TableCell sx={{ whiteSpace: 'nowrap' }}>{pago.forma}</TableCell>
+                  <TableCell align="right" sx={{ whiteSpace: 'nowrap' }}>
+                    <Tooltip title="Eliminar" placement="top" arrow>
+                      <IconButton
+                        size="small"
+                        color="error"
+                        onClick={() => handleEliminarPago(pago.id)}
+                      >
+                        <Iconify icon="fa-regular:trash-alt" />
+                      </IconButton>
+                    </Tooltip>
+                  </TableCell>
+                </TableRow>
+              ))}
+              {pedido?.pagos.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={TABLE_HEAD.length}>
+                    <Box sx={{ display: 'flex', justifyContent: 'center', py: 2 }}>
+                      Sin registros
+                    </Box>
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </Scrollbar>
+      </TableContainer>
       <Box sx={{ p: 2 }}>
         <Typography variant="h6" sx={{ color: 'text.disabled' }}>
           Total pagado:{' '}
           {new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(
-            pedido.total_pagos
+            pedido.total_pagos || 0
           )}
         </Typography>
       </Box>

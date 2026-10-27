@@ -44,8 +44,9 @@ const PedidosTabla = forwardRef((props, ref) => {
     {
       field: 'id',
       headerName: '#',
-      minWidth: 70,
-      flex: 1,
+      width: 80,
+      minWidth: 80,
+      flex: 0.5,
       hideable: false,
       filterable: false,
       sortable: false,
@@ -64,21 +65,33 @@ const PedidosTabla = forwardRef((props, ref) => {
     {
       field: 'cliente',
       headerName: 'detalles',
-      minWidth: 100,
-      flex: 1,
+      minWidth: 180,
+      flex: 1.5,
       hideable: false,
       filterable: false,
       sortable: false,
       disableColumnMenu: true,
       renderCell: (params) => (
-        <Stack sx={{ typography: 'body2' }}>
+        <Stack sx={{ typography: 'body2', minWidth: 0, width: 1, py: 0.5 }}>
           <Link
             href={paths.dashboard.clientes.edit(params.row.clienteId)}
-            style={{ color: 'inherit' }}
+            style={{
+              color: 'inherit',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+              textDecoration: 'none',
+              fontWeight: 500,
+            }}
           >
-            {params.row.cliente}
+            <Tooltip title={params.row.cliente || ''} placement="top-start" disableInteractive>
+              <span>{params.row.cliente}</span>
+            </Tooltip>
           </Link>
-          <Box component="span" sx={{ color: 'text.disabled' }}>
+          <Box
+            component="span"
+            sx={{ color: 'text.disabled', typography: 'caption', whiteSpace: 'nowrap' }}
+          >
             {params.row.created_at}
           </Box>
         </Stack>
@@ -87,8 +100,8 @@ const PedidosTabla = forwardRef((props, ref) => {
     {
       field: 'total',
       headerName: 'total',
-      minWidth: 50,
-      flex: 1,
+      minWidth: 100,
+      flex: 0.8,
       hideable: false,
       filterable: false,
       sortable: false,
@@ -97,8 +110,8 @@ const PedidosTabla = forwardRef((props, ref) => {
     {
       field: 'estado',
       headerName: 'estado',
-      minWidth: 150,
-      flex: 1,
+      minWidth: 240,
+      flex: 1.2,
       hideable: false,
       filterable: false,
       sortable: false,
@@ -144,9 +157,18 @@ const PedidosTabla = forwardRef((props, ref) => {
         };
 
         return (
-          <Stack spacing={0.2} direction="row" alignItems="center">
+          <Stack
+            spacing={0.5}
+            direction="row"
+            alignItems="center"
+            sx={{ minWidth: 0, width: 1, flexWrap: 'nowrap' }}
+          >
             {/* Mostrar el estado del pedido */}
-            <Label variant="outlined" color="info" sx={{ mr: 0.5 }}>
+            <Label
+              variant="outlined"
+              color="info"
+              sx={{ flexShrink: 0, mr: 0.5, whiteSpace: 'nowrap' }}
+            >
               {row.estadoNombre}
             </Label>
 
@@ -164,7 +186,7 @@ const PedidosTabla = forwardRef((props, ref) => {
                       event.preventDefault();
                       window.open(getTrackingUrl(guia), '_blank');
                     }}
-                    sx={{ minWidth: 0, p: 0.5 }}
+                    sx={{ flexShrink: 0, minWidth: 0, p: 0.5 }}
                   >
                     <Iconify icon="mdi:truck-delivery" width={16} />
                   </IconButton>
@@ -179,7 +201,7 @@ const PedidosTabla = forwardRef((props, ref) => {
                   color="success"
                   disableRipple
                   onMouseUp={handleFinalizarPedido}
-                  sx={{ minWidth: 0, p: 0.5 }}
+                  sx={{ flexShrink: 0, minWidth: 0, p: 0.5 }}
                 >
                   <Iconify icon="mdi:check-circle" width={16} />
                 </IconButton>
@@ -207,44 +229,55 @@ const PedidosTabla = forwardRef((props, ref) => {
   }, [fetchTableData, paginationModel, filterModel]);
 
   return (
-    <DataGrid
-      rows={rows}
-      columns={columns}
-      pagination
-      slots={{
-        toolbar: CustomToolbar,
-        noRowsOverlay: () => <EmptyContent />,
-        noResultsOverlay: () => <EmptyContent title="No se encontraron resultados" />,
-      }}
-      localeText={esES.components.MuiDataGrid.defaultProps.localeText}
-      loading={isLoading}
-      filterMode="server"
-      paginationMode="server"
-      onPaginationModelChange={setPaginationModel}
-      onFilterModelChange={setFilterModel}
-      initialState={{
-        pagination: { paginationModel },
-        density: 'compact',
-      }}
-      pageSizeOptions={[5, 10, 100, 1000]}
-      rowCount={rowsCount}
-      disableRowSelectionOnClick
-      getRowHeight={() => 'auto'}
-      sx={{
-        '--DataGrid-overlayHeight': '220px',
-        [`& .${gridClasses.cell}`]: { alignItems: 'center', display: 'inline-flex' },
-        '&.MuiDataGrid-root--densityCompact .MuiDataGrid-cell': { py: '5px' },
-        '&.MuiDataGrid-root--densityStandard .MuiDataGrid-cell': { py: '5px' },
-        '&.MuiDataGrid-root--densityComfortable .MuiDataGrid-cell': { py: '5px' },
-      }}
-    />
+    <Box sx={{ width: 1, minWidth: 0 }}>
+      <DataGrid
+        rows={rows}
+        columns={columns}
+        pagination
+        slots={{
+          toolbar: CustomToolbar,
+          noRowsOverlay: () => <EmptyContent />,
+          noResultsOverlay: () => <EmptyContent title="No se encontraron resultados" />,
+        }}
+        localeText={esES.components.MuiDataGrid.defaultProps.localeText}
+        loading={isLoading}
+        filterMode="server"
+        paginationMode="server"
+        onPaginationModelChange={setPaginationModel}
+        onFilterModelChange={setFilterModel}
+        initialState={{
+          pagination: { paginationModel },
+          density: 'compact',
+        }}
+        pageSizeOptions={[5, 10, 100, 1000]}
+        rowCount={rowsCount}
+        disableRowSelectionOnClick
+        getRowHeight={() => 'auto'}
+        sx={{
+          '--DataGrid-overlayHeight': '220px',
+          [`& .${gridClasses.cell}`]: { alignItems: 'center', display: 'inline-flex' },
+          '&.MuiDataGrid-root--densityCompact .MuiDataGrid-cell': { py: '5px' },
+          '&.MuiDataGrid-root--densityStandard .MuiDataGrid-cell': { py: '5px' },
+          '&.MuiDataGrid-root--densityComfortable .MuiDataGrid-cell': { py: '5px' },
+        }}
+      />
+    </Box>
   );
 });
 
 function CustomToolbar() {
   return (
-    <GridToolbarContainer sx={{ '.MuiInputBase-input': { py: '0.5rem !important' }, pt: '2px' }}>
-      <Stack spacing={1} flexGrow={1} direction="row" alignItems="center" justifyContent="flex-end">
+    <GridToolbarContainer
+      sx={{ '.MuiInputBase-input': { py: '0.5rem !important' }, pt: '2px', px: 1 }}
+    >
+      <Stack
+        spacing={1}
+        flexGrow={1}
+        direction="row"
+        alignItems="center"
+        justifyContent="flex-end"
+        sx={{ flexWrap: 'wrap', width: 1, py: 0.5 }}
+      >
         <GridToolbarExport />
         <GridToolbarQuickFilter
           quickFilterParser={(searchInput) => searchInput.split(',').map((value) => value.trim())}
