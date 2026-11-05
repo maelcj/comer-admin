@@ -29,9 +29,9 @@ export function SeoCategoriasTableToolbar({ filters }) {
   return (
     <Stack
       spacing={2}
-      alignItems={{ xs: 'flex-end', md: 'center' }}
+      alignItems={{ xs: 'flex-start', md: 'center' }}
       direction={{ xs: 'column', md: 'row' }}
-      sx={{ p: 2.5, pr: { xs: 2.5, md: 1 } }}
+      sx={{ p: 2.5, pr: { xs: 2.5, md: 1 }, flexWrap: 'wrap' }}
     >
       <TextField
         value={filters.state.name}
@@ -45,6 +45,15 @@ export function SeoCategoriasTableToolbar({ filters }) {
           ),
         }}
         sx={{ width: { xs: 1, md: 260 } }}
+      />
+      <FormControlLabel
+        control={
+          <Checkbox
+            checked={!!filters.state.include_roots}
+            onChange={(e) => handleChangeFilter('include_roots', e)}
+          />
+        }
+        label="Incluir categorías raíz"
       />
       <Typography variant="subtitle2" sx={{ mr: 2, ml: { md: 2 } }}>
         Mostrar solo categorías que no tengan:
@@ -109,6 +118,7 @@ SeoCategoriasTableToolbar.propTypes = {
       filter_no_meta_description: PropTypes.bool,
       filter_no_meta_title: PropTypes.bool,
       filter_no_title: PropTypes.bool,
+      include_roots: PropTypes.bool,
       name: PropTypes.string,
     }),
   }),

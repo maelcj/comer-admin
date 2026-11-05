@@ -3,9 +3,10 @@
 import { useState, useEffect, useCallback } from 'react';
 
 import Card from '@mui/material/Card';
+import Link from '@mui/material/Link';
 import Tooltip from '@mui/material/Tooltip';
-import CardHeader from '@mui/material/CardHeader';
 import { esES } from '@mui/x-data-grid/locales';
+import CardHeader from '@mui/material/CardHeader';
 import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
 import { DataGrid, gridClasses, GridToolbarContainer } from '@mui/x-data-grid';
@@ -29,6 +30,7 @@ export function SeoCategoriasTable() {
     filter_no_description: false,
     filter_no_meta_description: false,
     filter_no_image: false,
+    include_roots: false,
   });
 
   const [isLoading, setisLoading] = useState(true);
@@ -54,16 +56,51 @@ export function SeoCategoriasTable() {
   const columns = [
     {
       field: 'name',
-      headerName: 'Nombre',
-      flex: 1,
-      minWidth: 200,
-      renderCell: (params) => (
-        <Tooltip title={params.row.arbol || params.row.name} placement="top">
-          <Typography variant="body2" noWrap>
-            {params.row.name}
+      headerName: 'Categoría',
+      flex: 1.5,
+      minWidth: 240,
+      renderCell: (params) => {
+        const fullPath = params.row.arbol || params.row.name;
+
+        if (params.row.url) {
+          return (
+            <Link
+              href={params.row.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              underline="hover"
+              variant="body2"
+              onClick={(e) => e.stopPropagation()}
+              sx={{
+                color: 'text.primary',
+                fontWeight: 500,
+                whiteSpace: 'normal',
+                wordBreak: 'break-word',
+                lineHeight: 1.4,
+                cursor: 'pointer',
+                '&:hover': {
+                  color: 'primary.main',
+                },
+              }}
+            >
+              {fullPath}
+            </Link>
+          );
+        }
+
+        return (
+          <Typography
+            variant="body2"
+            sx={{
+              whiteSpace: 'normal',
+              wordBreak: 'break-word',
+              lineHeight: 1.4,
+            }}
+          >
+            {fullPath}
           </Typography>
-        </Tooltip>
-      ),
+        );
+      },
     },
     {
       field: 'title',
@@ -197,10 +234,15 @@ export function SeoCategoriasTable() {
           }}
           pageSizeOptions={[10, 25, 50]}
           rowCount={rowsCount}
+          getRowHeight={() => 'auto'}
           disableRowSelectionOnClick
           sx={{
             '--DataGrid-overlayHeight': '220px',
-            [`& .${gridClasses.cell}`]: { alignItems: 'center', display: 'inline-flex' },
+            [`& .${gridClasses.cell}`]: {
+              alignItems: 'center',
+              display: 'inline-flex',
+              py: 1,
+            },
             height: '700px',
           }}
         />

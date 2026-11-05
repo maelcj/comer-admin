@@ -12,6 +12,7 @@ export const getCategoriasSeo = async (paginationModel, filters) => {
       if (filters.filter_no_meta_description)
         body.filter_no_meta_description = filters.filter_no_meta_description;
       if (filters.filter_no_image) body.filter_no_image = filters.filter_no_image;
+      if (filters.include_roots !== undefined) body.include_roots = filters.include_roots;
     }
 
     const res = await axios.post('/api/admin/categorias/getCategoriasSeo', body);
