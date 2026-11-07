@@ -1,7 +1,7 @@
 'use client';
 
+import Link from 'next/link';
 import PropTypes from 'prop-types';
-import * as NProgress from 'nprogress';
 import { useState, useEffect, useCallback } from 'react';
 
 import Card from '@mui/material/Card';
@@ -13,18 +13,30 @@ import Typography from '@mui/material/Typography';
 import { DataGrid, gridClasses } from '@mui/x-data-grid';
 
 import { paths } from 'src/routes/paths';
-import { useRouter } from 'src/routes/hooks';
 
 import { getTablaPrecios } from 'src/actions/precios';
 
 import { Label } from 'src/components/label';
-import { Iconify } from 'src/components/iconify';
+import { penIcon } from 'src/components/icons';
 import { EmptyContent } from 'src/components/empty-content';
 
 // ----------------------------------------------------------------------
 
+const eyeIcon = (
+  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24">
+    <path fill="currentColor" d="M9.75 12a2.25 2.25 0 1 1 4.5 0a2.25 2.25 0 0 1-4.5 0" />
+    <path
+      fill="currentColor"
+      fillRule="evenodd"
+      d="M2 12c0 1.64.425 2.191 1.275 3.296C4.972 17.5 7.818 20 12 20s7.028-2.5 8.725-4.704C21.575 14.192 22 13.639 22 12c0-1.64-.425-2.191-1.275-3.296C19.028 6.5 16.182 4 12 4S4.972 6.5 3.275 8.704C2.425 9.81 2 10.361 2 12m10-3.75a3.75 3.75 0 1 0 0 7.5a3.75 3.75 0 0 0 0-7.5"
+      clipRule="evenodd"
+    />
+  </svg>
+);
+
+// ----------------------------------------------------------------------
+
 export function PreciosTable({ filters, onOpenDetails }) {
-  const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
   const [rows, setRows] = useState([]);
   const [rowsCount, setRowsCount] = useState(0);
@@ -37,23 +49,30 @@ export function PreciosTable({ filters, onOpenDetails }) {
     return { page: 0, pageSize: 10 };
   });
 
+  const [sortModel, setSortModel] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('preciosTableSort');
+      return saved ? JSON.parse(saved) : [];
+    }
+    return [];
+  });
+
   useEffect(() => {
     if (typeof window !== 'undefined') {
       localStorage.setItem('preciosTablePagination', JSON.stringify(paginationModel));
     }
   }, [paginationModel]);
 
-  const handleEditRow = (storeProductId) => {
-    if (storeProductId) {
-      NProgress.start();
-      router.push(paths.dashboard.productos.edit(storeProductId));
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('preciosTableSort', JSON.stringify(sortModel));
     }
-  };
+  }, [sortModel]);
 
   const fetchTableData = useCallback(async () => {
     setIsLoading(true);
     try {
-      const data = await getTablaPrecios(paginationModel, {}, filters);
+      const data = await getTablaPrecios(paginationModel, {}, filters, sortModel);
       if (data) {
         setRows(data.rows || []);
         setRowsCount(data.totalRows || 0);
@@ -63,11 +82,16 @@ export function PreciosTable({ filters, onOpenDetails }) {
     } finally {
       setIsLoading(false);
     }
-  }, [paginationModel, filters]);
+  }, [paginationModel, filters, sortModel]);
 
   useEffect(() => {
     fetchTableData();
   }, [fetchTableData]);
+
+  // Reiniciar a la página 0 cuando cambian los filtros
+  useEffect(() => {
+    setPaginationModel((prev) => (prev.page === 0 ? prev : { ...prev, page: 0 }));
+  }, [filters]);
 
   const columns = [
     {
@@ -75,28 +99,67 @@ export function PreciosTable({ filters, onOpenDetails }) {
       headerName: 'Marca',
       minWidth: 140,
       flex: 0.8,
-      sortable: false,
+      sortable: true,
       filterable: false,
       disableColumnMenu: true,
-      renderCell: (params) => (
-        <Typography variant="subtitle2" sx={{ fontWeight: 700, textTransform: 'capitalize' }}>
-          {params.row.brand}
-        </Typography>
-      ),
+      renderCell: (params) => {
+        const content = (
+          <Typography
+            variant="subtitle2"
+            sx={{
+              fontWeight: 700,
+              textTransform: 'capitalize',
+              ...(params.row.store_product_id && { cursor: 'pointer' }),
+            }}
+          >
+            {params.row.brand}
+          </Typography>
+        );
+
+        return params.row.store_product_id ? (
+          <Link
+            href={paths.dashboard.productos.edit(params.row.store_product_id)}
+            style={{ textDecoration: 'none', color: 'inherit' }}
+          >
+            {content}
+          </Link>
+        ) : (
+          content
+        );
+      },
     },
     {
       field: 'type',
       headerName: 'Tipo',
       minWidth: 140,
       flex: 0.9,
-      sortable: false,
+      sortable: true,
       filterable: false,
       disableColumnMenu: true,
-      renderCell: (params) => (
-        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-          {params.row.type || '-'}
-        </Typography>
-      ),
+      renderCell: (params) => {
+        const content = (
+          <Typography
+            variant="body2"
+            sx={{
+              color: 'text.secondary',
+              ...(params.row.store_product_id && { cursor: 'pointer' }),
+            }}
+          >
+            {params.row.type || '-'}
+          </Typography>
+        );
+
+        return params.row.store_product_id ? (
+          <Link
+            href={paths.dashboard.productos.edit(params.row.store_product_id)}
+            style={{ textDecoration: 'none', color: 'inherit' }}
+          >
+            {content}
+          </Link>
+        ) : (
+          content
+        );
+      },
     },
     {
       field: 'model',
@@ -106,18 +169,37 @@ export function PreciosTable({ filters, onOpenDetails }) {
       sortable: false,
       filterable: false,
       disableColumnMenu: true,
-      renderCell: (params) => (
-        <Stack spacing={0.2} sx={{ py: 1 }}>
-          <Typography variant="body2" sx={{ fontWeight: 600 }}>
-            {params.row.model}
-          </Typography>
-          {params.row.mpn && params.row.mpn !== params.row.model && (
-            <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-              MPN: {params.row.mpn}
+      renderCell: (params) => {
+        const content = (
+          <Stack
+            spacing={0.2}
+            sx={{
+              py: 1,
+              ...(params.row.store_product_id && { cursor: 'pointer' }),
+            }}
+          >
+            <Typography variant="body2" sx={{ fontWeight: 600 }}>
+              {params.row.model}
             </Typography>
-          )}
-        </Stack>
-      ),
+            {params.row.mpn && params.row.mpn !== params.row.model && (
+              <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                MPN: {params.row.mpn}
+              </Typography>
+            )}
+          </Stack>
+        );
+
+        return params.row.store_product_id ? (
+          <Link
+            href={paths.dashboard.productos.edit(params.row.store_product_id)}
+            style={{ textDecoration: 'none', color: 'inherit' }}
+          >
+            {content}
+          </Link>
+        ) : (
+          content
+        );
+      },
     },
     {
       field: 'views',
@@ -130,7 +212,9 @@ export function PreciosTable({ filters, onOpenDetails }) {
       disableColumnMenu: true,
       renderCell: (params) => (
         <Stack direction="row" alignItems="center" spacing={0.5} sx={{ color: 'text.secondary' }}>
-          <Iconify icon="solar:eye-bold" width={16} sx={{ color: 'text.disabled' }} />
+          <Stack component="span" sx={{ color: 'text.disabled', display: 'inline-flex' }}>
+            {eyeIcon}
+          </Stack>
           <Typography variant="body2" sx={{ fontWeight: 600 }}>
             {Number(params.row.views || 0).toLocaleString()}
           </Typography>
@@ -290,6 +374,7 @@ export function PreciosTable({ filters, onOpenDetails }) {
       },
     },
     {
+      type: 'actions',
       field: 'actions',
       headerName: 'Acciones',
       width: 110,
@@ -299,27 +384,23 @@ export function PreciosTable({ filters, onOpenDetails }) {
       filterable: false,
       disableColumnMenu: true,
       renderCell: (params) => (
-        <Stack direction="row" spacing={0.5} alignItems="center" sx={{ height: 1 }}>
-          <Tooltip title="Editar producto" placement="top">
-            <span>
-              <IconButton
-                color="primary"
-                size="small"
-                disabled={!params.row.store_product_id}
-                onClick={() => handleEditRow(params.row.store_product_id)}
+        <Stack direction="row" spacing={0.5} alignItems="center">
+          {params.row.store_product_id && (
+            <Tooltip title="Editar producto" placement="top">
+              <Link
+                href={paths.dashboard.productos.edit(params.row.store_product_id)}
+                style={{ textDecoration: 'none', color: 'inherit' }}
               >
-                <Iconify icon="solar:pen-bold" width={18} />
-              </IconButton>
-            </span>
-          </Tooltip>
+                <IconButton color="primary" size="small">
+                  {penIcon}
+                </IconButton>
+              </Link>
+            </Tooltip>
+          )}
 
           <Tooltip title="Ver más detalles" placement="top">
-            <IconButton
-              color="info"
-              size="small"
-              onClick={() => onOpenDetails(params.row)}
-            >
-              <Iconify icon="solar:eye-bold-duotone" width={18} />
+            <IconButton color="info" size="small" onClick={() => onOpenDetails(params.row)}>
+              {eyeIcon}
             </IconButton>
           </Tooltip>
         </Stack>
@@ -328,7 +409,7 @@ export function PreciosTable({ filters, onOpenDetails }) {
   ];
 
   return (
-    <Card sx={{ borderRadius: 2 }}>
+    <Card>
       <DataGrid
         rows={rows}
         columns={columns}
@@ -336,11 +417,19 @@ export function PreciosTable({ filters, onOpenDetails }) {
         localeText={esES.components.MuiDataGrid.defaultProps.localeText}
         loading={isLoading}
         filterMode="server"
+        sortingMode="server"
         paginationMode="server"
+        sortModel={sortModel}
+        onSortModelChange={setSortModel}
         onPaginationModelChange={setPaginationModel}
+        paginationModel={paginationModel}
+        initialState={{
+          pagination: { paginationModel },
+          density: 'compact',
+          sorting: { sortModel },
+        }}
         pageSizeOptions={[5, 10, 25, 50]}
         rowCount={rowsCount}
-        paginationModel={paginationModel}
         getRowHeight={() => 'auto'}
         disableRowSelectionOnClick
         slots={{
@@ -356,13 +445,12 @@ export function PreciosTable({ filters, onOpenDetails }) {
           ),
         }}
         sx={{
-          minHeight: 450,
+          '--DataGrid-overlayHeight': '220px',
           [`& .${gridClasses.cell}`]: {
             alignItems: 'center',
             display: 'inline-flex',
-            py: 1,
           },
-          border: 'none',
+          height: '600px',
         }}
       />
     </Card>
@@ -375,6 +463,7 @@ PreciosTable.propTypes = {
     type: PropTypes.string,
     modelo: PropTypes.string,
     soloConCompetidores: PropTypes.bool,
+    comparativa: PropTypes.string,
   }).isRequired,
   onOpenDetails: PropTypes.func.isRequired,
 };

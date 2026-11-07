@@ -5,7 +5,7 @@ import { axiosServer } from 'src/utils/axiosInterceptor';
 
 // ----------------------------------------------------------------------
 
-export async function getTablaPrecios(paginationModel, filterModel, filters) {
+export async function getTablaPrecios(paginationModel, filterModel, filters, sortModel) {
   const url = endpoints.precios.getTablaPrecios;
 
   return axiosServer()
@@ -14,6 +14,7 @@ export async function getTablaPrecios(paginationModel, filterModel, filters) {
         paginationModel,
         filterModel,
         filters,
+        sortModel,
       },
     })
     .then((res) => res.data)
