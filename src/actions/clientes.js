@@ -193,3 +193,47 @@ export async function eliminarPedidoPendiente(idPedido) {
       return message;
     });
 }
+
+export async function getClientesDuplicados() {
+  const url = endpoints.clientes.getClientesDuplicados;
+
+  return axiosServer()
+    .get(url)
+    .then((res) => res.data)
+    .catch(() => ({ grupos: [], totalGrupos: 0, totalRegistros: 0 }));
+}
+
+export async function buscarClientesFusion(search) {
+  const url = endpoints.clientes.buscarClientesFusion;
+
+  return axiosServer()
+    .get(url, {
+      params: {
+        search,
+      },
+    })
+    .then((res) => res.data)
+    .catch(() => []);
+}
+
+export async function fusionarClientes(idClientePrincipal, idsClientesSecundarios) {
+  const url = endpoints.clientes.fusionarClientes;
+
+  return axiosServer()
+    .post(url, {
+      idClientePrincipal,
+      idsClientesSecundarios,
+    })
+    .then((res) => ({
+      type: 'success',
+      message: 'Clientes fusionados correctamente',
+      data: res.data,
+    }))
+    .catch((error) => ({
+      type: 'error',
+      message:
+        typeof error === 'string'
+          ? error
+          : error?.message || error?.response?.data || 'Error al fusionar clientes',
+    }));
+}

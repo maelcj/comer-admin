@@ -22,7 +22,7 @@ import { EmptyContent } from 'src/components/empty-content';
 
 // ----------------------------------------------------------------------
 
-export function ClientesTable() {
+export function ClientesTable({ refreshTrigger = 0 }) {
   const router = useRouter();
   const [isLoading, setisLoading] = useState(true);
   const [rows, setRows] = useState([]);
@@ -154,7 +154,7 @@ export function ClientesTable() {
 
   useEffect(() => {
     fetchTableData();
-  }, [fetchTableData, paginationModel, search]);
+  }, [fetchTableData, paginationModel, search, refreshTrigger]);
 
   useEffect(() => {
     if (!debouncedSearch1 && (debouncedSearch2 || debouncedSearch3)) {

@@ -228,6 +228,9 @@ export const endpoints = {
     getTablaPedidosPendientes: '/api/admin/clientes/getTablaPedidosPendientes',
     asignarPedidoPendiente: '/api/admin/clientes/asignarPedidoPendiente',
     eliminarPedidoPendiente: '/api/admin/clientes/eliminarPedidoPendiente',
+    getClientesDuplicados: '/api/admin/clientes/getClientesDuplicados',
+    buscarClientesFusion: '/api/admin/clientes/buscarClientesFusion',
+    fusionarClientes: '/api/admin/clientes/fusionarClientes',
   },
 
   usuarios: {
