@@ -207,7 +207,7 @@ export function PreciosTable({ filters, onOpenDetails }) {
       width: 100,
       align: 'center',
       headerAlign: 'center',
-      sortable: false,
+      sortable: true,
       filterable: false,
       disableColumnMenu: true,
       renderCell: (params) => (

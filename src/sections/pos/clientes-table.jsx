@@ -5,7 +5,7 @@ import { useDebounce } from 'use-debounce';
 import { useState, useEffect, useCallback } from 'react';
 
 import Box from '@mui/material/Box';
-import Stack from '@mui/material/Stack';
+import Button from '@mui/material/Button';
 import { esES } from '@mui/x-data-grid/locales';
 import TextField from '@mui/material/TextField';
 import InputAdornment from '@mui/material/InputAdornment';
@@ -22,6 +22,8 @@ import { EmptyContent } from 'src/components/empty-content';
 
 // ----------------------------------------------------------------------
 
+const MAX_VISIBLE_ITEMS = 10;
+
 export function ClientesTable({ refreshTrigger = 0 }) {
   const router = useRouter();
   const [isLoading, setisLoading] = useState(true);
@@ -31,13 +33,11 @@ export function ClientesTable({ refreshTrigger = 0 }) {
     const saved = localStorage.getItem('posTablePagination');
     return saved ? JSON.parse(saved) : { page: 0, pageSize: 5 };
   });
-  const [search, setSearch] = useState(() => localStorage.getItem('clientesTableSearch') || '');
-  const [search1, setSearch1] = useState(() => localStorage.getItem('clientesTableSearch1') || '');
-  const [search2, setSearch2] = useState(() => localStorage.getItem('clientesTableSearch2') || '');
-  const [search3, setSearch3] = useState(() => localStorage.getItem('clientesTableSearch3') || '');
-  const [searchType, setSearchType] = useState(
-    () => localStorage.getItem('clientesTableSearchType') || 1
-  );
+  const [search, setSearch] = useState('');
+  const [search1, setSearch1] = useState('');
+  const [search2, setSearch2] = useState('');
+  const [search3, setSearch3] = useState('');
+  const [searchType, setSearchType] = useState(1);
   const [debouncedSearch1] = useDebounce(search1, 500);
   const [debouncedSearch2] = useDebounce(search2, 500);
   const [debouncedSearch3] = useDebounce(search3, 500);
@@ -46,25 +46,61 @@ export function ClientesTable({ refreshTrigger = 0 }) {
     localStorage.setItem('productosTablePagination', JSON.stringify(paginationModel));
   }, [paginationModel]);
 
-  useEffect(() => {
-    localStorage.setItem('clientesTableSearch', search);
-  }, [search]);
+  const renderBadgesCell = (items, getHref, color, clienteId) => {
+    const rawItems = items ?? [];
+    const allNumeric = rawItems.every((item) => !Number.isNaN(Number(item)));
+    const sortedItems = allNumeric
+      ? [...rawItems].sort((a, b) => Number(b) - Number(a))
+      : [...rawItems].reverse();
 
-  useEffect(() => {
-    localStorage.setItem('clientesTableSearch1', search1);
-  }, [search1]);
+    const visibleItems = sortedItems.slice(0, MAX_VISIBLE_ITEMS);
+    const hasMore = sortedItems.length > MAX_VISIBLE_ITEMS;
 
-  useEffect(() => {
-    localStorage.setItem('clientesTableSearch2', search2);
-  }, [search2]);
+    return (
+      <Box
+        sx={{
+          py: 0.75,
+          width: '100%',
+          display: 'flex',
+          flexWrap: 'wrap',
+          alignItems: 'center',
+          gap: 0.5,
+        }}
+      >
+        {visibleItems.map((item, key) => (
+          <Link
+            key={`${item}-${key}`}
+            href={getHref(item)}
+            style={{ textDecoration: 'none', color: 'inherit', display: 'inline-flex' }}
+          >
+            <Label variant="outlined" color={color} sx={{ cursor: 'pointer' }}>
+              {item}
+            </Label>
+          </Link>
+        ))}
 
-  useEffect(() => {
-    localStorage.setItem('clientesTableSearch3', search3);
-  }, [search3]);
-
-  useEffect(() => {
-    localStorage.setItem('clientesTableSearchType', searchType);
-  }, [searchType]);
+        {hasMore && (
+          <Button
+            component={Link}
+            href={paths.dashboard.clientes.edit(clienteId)}
+            size="small"
+            variant="soft"
+            color={color}
+            sx={{
+              height: 24,
+              minWidth: 'auto',
+              px: 1,
+              fontSize: 12,
+              lineHeight: 1,
+              borderRadius: 0.75,
+            }}
+          >
+            Ver todos
+          </Button>
+        )}
+      </Box>
+    );
+  };
 
   const columns = [
     {
@@ -97,50 +133,31 @@ export function ClientesTable({ refreshTrigger = 0 }) {
     {
       field: 'cotizaciones',
       headerName: 'cotizaciones',
-      minWidth: 110,
+      flex: 1.5,
+      minWidth: 250,
       hideable: false,
       filterable: false,
       sortable: false,
       disableColumnMenu: true,
-      renderCell: (params) => (
-        <Stack direction="row" spacing={0.5} sx={{ py: 1 }} useFlexGap flexWrap="wrap">
-          {params.row.cotizaciones.map((cotizacion, key) => (
-            <Link
-              key={key}
-              href={paths.dashboard.cotizaciones.edit(cotizacion)}
-              style={{ textDecoration: 'none', color: 'inherit' }}
-            >
-              <Label variant="outlined" color="success" sx={{ cursor: 'pointer' }}>
-                {cotizacion}
-              </Label>
-            </Link>
-          ))}
-        </Stack>
-      ),
+      renderCell: (params) =>
+        renderBadgesCell(
+          params.row.cotizaciones,
+          paths.dashboard.cotizaciones.edit,
+          'success',
+          params.row.id
+        ),
     },
     {
       field: 'pedidos',
       headerName: 'pedidos',
-      minWidth: 110,
+      flex: 1.5,
+      minWidth: 250,
       hideable: false,
       filterable: false,
       sortable: false,
       disableColumnMenu: true,
-      renderCell: (params) => (
-        <Stack direction="row" spacing={0.5} sx={{ py: 1 }} useFlexGap flexWrap="wrap">
-          {params.row.pedidos.map((pedido, key) => (
-            <Link
-              key={key}
-              href={paths.dashboard.pedidos.edit(pedido)}
-              style={{ textDecoration: 'none', color: 'inherit' }}
-            >
-              <Label variant="outlined" color="info" sx={{ cursor: 'pointer' }}>
-                {pedido}
-              </Label>
-            </Link>
-          ))}
-        </Stack>
-      ),
+      renderCell: (params) =>
+        renderBadgesCell(params.row.pedidos, paths.dashboard.pedidos.edit, 'info', params.row.id),
     },
   ];
 
