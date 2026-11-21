@@ -36,7 +36,7 @@ const eyeIcon = (
 
 // ----------------------------------------------------------------------
 
-export function PreciosTable({ filters, onOpenDetails }) {
+export function PreciosTable({ filters, onOpenDetails, refreshTrigger = 0 }) {
   const [isLoading, setIsLoading] = useState(true);
   const [rows, setRows] = useState([]);
   const [rowsCount, setRowsCount] = useState(0);
@@ -44,9 +44,9 @@ export function PreciosTable({ filters, onOpenDetails }) {
   const [paginationModel, setPaginationModel] = useState(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('preciosTablePagination');
-      return saved ? JSON.parse(saved) : { page: 0, pageSize: 10 };
+      return saved ? JSON.parse(saved) : { page: 0, pageSize: 5 };
     }
-    return { page: 0, pageSize: 10 };
+    return { page: 0, pageSize: 5 };
   });
 
   const [sortModel, setSortModel] = useState(() => {
@@ -86,7 +86,7 @@ export function PreciosTable({ filters, onOpenDetails }) {
 
   useEffect(() => {
     fetchTableData();
-  }, [fetchTableData]);
+  }, [fetchTableData, refreshTrigger]);
 
   // Reiniciar a la página 0 cuando cambian los filtros
   useEffect(() => {
@@ -119,6 +119,8 @@ export function PreciosTable({ filters, onOpenDetails }) {
         return params.row.store_product_id ? (
           <Link
             href={paths.dashboard.productos.edit(params.row.store_product_id)}
+            target="_blank"
+            rel="noopener noreferrer"
             style={{ textDecoration: 'none', color: 'inherit' }}
           >
             {content}
@@ -152,6 +154,8 @@ export function PreciosTable({ filters, onOpenDetails }) {
         return params.row.store_product_id ? (
           <Link
             href={paths.dashboard.productos.edit(params.row.store_product_id)}
+            target="_blank"
+            rel="noopener noreferrer"
             style={{ textDecoration: 'none', color: 'inherit' }}
           >
             {content}
@@ -192,6 +196,8 @@ export function PreciosTable({ filters, onOpenDetails }) {
         return params.row.store_product_id ? (
           <Link
             href={paths.dashboard.productos.edit(params.row.store_product_id)}
+            target="_blank"
+            rel="noopener noreferrer"
             style={{ textDecoration: 'none', color: 'inherit' }}
           >
             {content}
@@ -399,7 +405,11 @@ export function PreciosTable({ filters, onOpenDetails }) {
           )}
 
           <Tooltip title="Ver más detalles" placement="top">
-            <IconButton color="info" size="small" onClick={() => onOpenDetails(params.row)}>
+            <IconButton
+              color="info"
+              size="small"
+              onClick={() => onOpenDetails(params.row)}
+            >
               {eyeIcon}
             </IconButton>
           </Tooltip>
@@ -466,4 +476,5 @@ PreciosTable.propTypes = {
     comparativa: PropTypes.string,
   }).isRequired,
   onOpenDetails: PropTypes.func.isRequired,
+  refreshTrigger: PropTypes.number,
 };

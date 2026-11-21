@@ -1,8 +1,9 @@
 'use client';
 
 import PropTypes from 'prop-types';
-import { useState, useEffect, useCallback } from 'react';
+import { useRef, useState, useEffect, useCallback } from 'react';
 
+import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import Link from '@mui/material/Link';
 import Stack from '@mui/material/Stack';
@@ -11,48 +12,44 @@ import Tooltip from '@mui/material/Tooltip';
 import { esES } from '@mui/x-data-grid/locales';
 import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
-import {
-  DataGrid,
-  gridClasses,
-  GridToolbarContainer,
-  GridToolbarQuickFilter,
-} from '@mui/x-data-grid';
+import { DataGrid, gridClasses } from '@mui/x-data-grid';
 
-import {
-  exportarJson,
-  getTablaCompetidores,
-  eliminarCompetidorUrl,
-} from 'src/actions/precios';
+import { getTablaCompetidores, eliminarCompetidorUrl } from 'src/actions/precios';
 
 import { Label } from 'src/components/label';
 import { toast } from 'src/components/snackbar';
 import { Iconify } from 'src/components/iconify';
 import { EmptyContent } from 'src/components/empty-content';
 
-import { PreciosImportDialog } from './precios-import-dialog';
 import { PreciosCompetidorAddDialog } from './precios-competidor-add-dialog';
+import { PreciosCompetidorCommentDialog } from './precios-competidor-comment-dialog';
+import { PreciosCompetidorExcludeDialog } from './precios-competidor-exclude-dialog';
 
 // ----------------------------------------------------------------------
 
-export function PreciosCompetidoresTable({ filters }) {
+export function PreciosCompetidoresTable({ filters, refreshTrigger = 0, onProductExcluded }) {
   const [isLoading, setIsLoading] = useState(true);
   const [rows, setRows] = useState([]);
   const [rowsCount, setRowsCount] = useState(0);
 
-  const [rowSelectionModel, setRowSelectionModel] = useState([]);
-
   const [paginationModel, setPaginationModel] = useState(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('preciosCompetidoresPagination');
-      return saved ? JSON.parse(saved) : { page: 0, pageSize: 10 };
+      return saved ? JSON.parse(saved) : { page: 0, pageSize: 5 };
     }
-    return { page: 0, pageSize: 10 };
+    return { page: 0, pageSize: 5 };
   });
 
   const [openAddDialog, setOpenAddDialog] = useState(false);
   const [selectedProductForAdd, setSelectedProductForAdd] = useState(null);
 
-  const [openImportDialog, setOpenImportDialog] = useState(false);
+  const [openCommentDialog, setOpenCommentDialog] = useState(false);
+  const [selectedProductForComment, setSelectedProductForComment] = useState(null);
+
+  const [openExcludeDialog, setOpenExcludeDialog] = useState(false);
+  const [selectedProductForExclude, setSelectedProductForExclude] = useState(null);
+
+  const fetchIdRef = useRef(0);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -60,25 +57,46 @@ export function PreciosCompetidoresTable({ filters }) {
     }
   }, [paginationModel]);
 
+  // Reiniciar a la página 0 cuando cambian los filtros
+  useEffect(() => {
+    setPaginationModel((prev) => (prev.page === 0 ? prev : { ...prev, page: 0 }));
+  }, [filters]);
+
   const fetchTableData = useCallback(async () => {
+    const currentFetchId = fetchIdRef.current + 1;
+    fetchIdRef.current = currentFetchId;
     setIsLoading(true);
     try {
       const data = await getTablaCompetidores(paginationModel, {}, filters);
+      if (currentFetchId !== fetchIdRef.current) return;
+
       if (data) {
-        setRows(data.rows || []);
-        setRowsCount(data.totalRows || 0);
+        const fetchedRows = data.rows || [];
+        const total = data.totalRows || 0;
+
+        // Si se excluyó el último registro de una página > 0, retroceder de página
+        if (fetchedRows.length === 0 && total > 0 && paginationModel.page > 0) {
+          setPaginationModel((prev) => ({ ...prev, page: Math.max(0, prev.page - 1) }));
+          return;
+        }
+
+        setRows(fetchedRows);
+        setRowsCount(total);
       }
     } catch (error) {
+      if (currentFetchId !== fetchIdRef.current) return;
       console.error('Error fetching tabla competidores:', error);
       toast.error('Error al cargar la lista de competidores');
     } finally {
-      setIsLoading(false);
+      if (currentFetchId === fetchIdRef.current) {
+        setIsLoading(false);
+      }
     }
   }, [paginationModel, filters]);
 
   useEffect(() => {
     fetchTableData();
-  }, [fetchTableData]);
+  }, [fetchTableData, refreshTrigger]);
 
   // Manejar apertura de diálogo para agregar URL
   const handleOpenAddDialog = (product) => {
@@ -89,6 +107,33 @@ export function PreciosCompetidoresTable({ filters }) {
   const handleCloseAddDialog = () => {
     setOpenAddDialog(false);
     setSelectedProductForAdd(null);
+  };
+
+  // Manejar apertura de diálogo de comentarios
+  const handleOpenCommentDialog = (product) => {
+    setSelectedProductForComment(product);
+    setOpenCommentDialog(true);
+  };
+
+  const handleCloseCommentDialog = () => {
+    setOpenCommentDialog(false);
+    setSelectedProductForComment(null);
+  };
+
+  // Manejar apertura de diálogo de exclusión
+  const handleOpenExcludeDialog = (product) => {
+    setSelectedProductForExclude(product);
+    setOpenExcludeDialog(true);
+  };
+
+  const handleCloseExcludeDialog = () => {
+    setOpenExcludeDialog(false);
+    setSelectedProductForExclude(null);
+  };
+
+  const handleExcludeSuccess = () => {
+    fetchTableData();
+    onProductExcluded?.();
   };
 
   // Manejar eliminación de una URL de competidor
@@ -110,74 +155,67 @@ export function PreciosCompetidoresTable({ filters }) {
     }
   };
 
-  // Manejar exportación JSON de filas seleccionadas
-  const handleExportJson = async () => {
-    if (rowSelectionModel.length === 0) {
-      toast.warning('Selecciona al menos un producto para exportar.');
-      return;
-    }
-
-    try {
-      // Intentar obtener los datos completos desde el servidor
-      const res = await exportarJson(rowSelectionModel);
-      let productsData = res?.products;
-
-      // Fallback a los datos en memoria si la API devuelve vacío
-      if (!productsData || productsData.length === 0) {
-        const selectedRows = rows.filter((r) => rowSelectionModel.includes(r.id));
-        productsData = selectedRows.map((r) => ({
-          id: r.id,
-          brand: r.brand,
-          model: r.model,
-          mpn: r.mpn,
-          name: r.name,
-          product_url: r.product_url,
-        }));
-      }
-
-      const exportPayload = {
-        products: productsData,
-      };
-
-      const jsonStr = JSON.stringify(exportPayload, null, 2);
-      const blob = new Blob([jsonStr], { type: 'application/json' });
-      const downloadUrl = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = downloadUrl;
-      link.download = `productos-competencia-${Date.now()}.json`;
-      link.click();
-      URL.revokeObjectURL(downloadUrl);
-
-      toast.success(`Se exportaron ${productsData.length} productos en JSON`);
-    } catch (error) {
-      console.error('Error exportando JSON:', error);
-      toast.error('Error al generar la exportación JSON');
-    }
-  };
-
   const columns = [
     {
       field: 'nombre',
       headerName: 'Nombre (Tipo + Marca + Modelo)',
-      minWidth: 260,
-      flex: 1.2,
+      minWidth: 230,
+      flex: 1.5,
       sortable: false,
       filterable: false,
       disableColumnMenu: true,
       renderCell: (params) => {
-        const fullName = params.row.full_name || `${params.row.type} ${params.row.brand} ${params.row.model}`;
+        const fullName =
+          params.row.full_name || `${params.row.type} ${params.row.brand} ${params.row.model}`;
         return (
-          <Stack spacing={0.3} sx={{ py: 1.5 }}>
-            <Typography variant="subtitle2" sx={{ fontWeight: 700, lineHeight: 1.3 }}>
+          <Stack
+            spacing={0.5}
+            sx={{
+              py: 1,
+              width: 1,
+              whiteSpace: 'normal',
+              wordBreak: 'break-word',
+            }}
+          >
+            <Typography
+              variant="subtitle2"
+              sx={{
+                fontWeight: 700,
+                lineHeight: 1.35,
+                whiteSpace: 'normal',
+                wordBreak: 'break-word',
+              }}
+            >
               {fullName}
             </Typography>
 
-            <Stack direction="row" spacing={0.75} alignItems="center" flexWrap="wrap">
+            <Stack
+              direction="row"
+              spacing={1}
+              alignItems="center"
+              flexWrap="wrap"
+              useFlexGap
+            >
               {params.row.mpn && (
                 <Typography variant="caption" sx={{ color: 'text.secondary' }}>
                   MPN: <strong>{params.row.mpn}</strong>
                 </Typography>
               )}
+
+              <Tooltip title="Vistas del producto" placement="top">
+                <Stack
+                  direction="row"
+                  alignItems="center"
+                  spacing={0.35}
+                  sx={{ color: 'text.secondary' }}
+                >
+                  <Iconify icon="solar:eye-bold" width={13} sx={{ color: 'text.disabled' }} />
+                  <Typography variant="caption" sx={{ fontWeight: 600 }}>
+                    {Number(params.row.views || 0).toLocaleString()}
+                  </Typography>
+                </Stack>
+              </Tooltip>
+
               {params.row.product_url && (
                 <Link
                   href={params.row.product_url}
@@ -188,10 +226,10 @@ export function PreciosCompetidoresTable({ filters }) {
                     color: 'primary.main',
                     display: 'inline-flex',
                     alignItems: 'center',
-                    gap: 0.3,
+                    gap: 0.25,
                   }}
                 >
-                  Ver en tienda
+                  Tienda
                   <Iconify icon="solar:arrow-right-up-linear" width={12} />
                 </Link>
               )}
@@ -201,28 +239,72 @@ export function PreciosCompetidoresTable({ filters }) {
       },
     },
     {
-      field: 'views',
-      headerName: 'Vistas',
-      width: 100,
-      align: 'center',
-      headerAlign: 'center',
+      field: 'precios_tiendas',
+      headerName: 'Precios',
+      minWidth: 150,
+      flex: 0.8,
       sortable: false,
       filterable: false,
       disableColumnMenu: true,
-      renderCell: (params) => (
-        <Stack direction="row" alignItems="center" spacing={0.5} sx={{ color: 'text.secondary' }}>
-          <Iconify icon="solar:eye-bold" width={16} sx={{ color: 'text.disabled' }} />
-          <Typography variant="body2" sx={{ fontWeight: 600 }}>
-            {Number(params.row.views || 0).toLocaleString()}
-          </Typography>
-        </Stack>
-      ),
+      renderCell: (params) => {
+        const tiendas = params.row.precios_tiendas || [];
+        if (tiendas.length === 0) {
+          return (
+            <Typography variant="caption" color="text.secondary">
+              Sin precios
+            </Typography>
+          );
+        }
+
+        return (
+          <Stack spacing={0.4} sx={{ py: 1, width: 1 }}>
+            {tiendas.map((store) => (
+              <Stack
+                key={store.store_id}
+                direction="row"
+                alignItems="center"
+                justifyContent="space-between"
+                spacing={0.75}
+              >
+                <Tooltip
+                  title={store.is_current_store ? `${store.store_name} (Tienda actual)` : store.store_name}
+                  placement="top"
+                >
+                  <Typography
+                    variant="caption"
+                    noWrap
+                    sx={{
+                      fontWeight: store.is_current_store ? 700 : 500,
+                      color: store.is_current_store ? 'primary.main' : 'text.secondary',
+                      textTransform: 'capitalize',
+                      minWidth: 0,
+                    }}
+                  >
+                    {store.store_name}:
+                  </Typography>
+                </Tooltip>
+                <Typography
+                  variant="caption"
+                  sx={{
+                    fontWeight: store.is_current_store ? 700 : 600,
+                    color: store.is_current_store ? 'primary.dark' : 'text.primary',
+                    whiteSpace: 'nowrap',
+                    flexShrink: 0,
+                  }}
+                >
+                  {store.current_price_formatted}
+                </Typography>
+              </Stack>
+            ))}
+          </Stack>
+        );
+      },
     },
     {
       field: 'urls',
       headerName: 'URLs de Competencia',
-      minWidth: 420,
-      flex: 2,
+      minWidth: 215,
+      flex: 1.25,
       sortable: false,
       filterable: false,
       disableColumnMenu: true,
@@ -231,33 +313,32 @@ export function PreciosCompetidoresTable({ filters }) {
 
         if (competitorUrls.length === 0) {
           return (
-            <Label variant="soft" color="default" sx={{ my: 1.5 }}>
-              Sin URLs registradas
+            <Label variant="soft" color="default" sx={{ my: 1 }}>
+              Sin URLs
             </Label>
           );
         }
 
         return (
-          <Stack spacing={0.75} sx={{ py: 1.5, width: 1 }}>
+          <Stack spacing={0.6} sx={{ py: 1, width: 1 }}>
             {competitorUrls.map((urlItem) => (
               <Stack
                 key={urlItem.id}
                 direction="row"
                 alignItems="center"
                 justifyContent="space-between"
-                spacing={1}
+                spacing={0.75}
                 sx={{
-                  px: 1.25,
-                  py: 0.75,
+                  px: 1,
+                  py: 0.5,
                   borderRadius: 1,
                   bgcolor: urlItem.has_error ? 'error.lighter' : 'background.neutral',
                   border: (th) =>
                     `1px solid ${urlItem.has_error ? th.palette.error.light : th.palette.divider}`,
                 }}
               >
-                {/* Enlace y dominio */}
-                <Stack direction="row" alignItems="center" spacing={1} sx={{ minWidth: 0, flex: 1 }}>
-                  {/* Signo de alerta si tiene error registrado */}
+                {/* Dominio clickeable con tooltip de URL completa */}
+                <Stack direction="row" alignItems="center" spacing={0.6} sx={{ minWidth: 0, flex: 1 }}>
                   {urlItem.has_error && (
                     <Tooltip
                       title={`Error registrado: ${urlItem.errors}`}
@@ -267,50 +348,40 @@ export function PreciosCompetidoresTable({ filters }) {
                       <span>
                         <Iconify
                           icon="solar:danger-triangle-bold"
-                          width={18}
+                          width={16}
                           sx={{ color: 'error.main', flexShrink: 0, verticalAlign: 'middle' }}
                         />
                       </span>
                     </Tooltip>
                   )}
 
-                  <Stack spacing={0} sx={{ minWidth: 0 }}>
-                    <Typography
-                      variant="caption"
-                      sx={{
-                        fontWeight: 700,
-                        color: urlItem.has_error ? 'error.darker' : 'text.primary',
-                      }}
-                    >
-                      {urlItem.domain || 'Competidor'}
-                    </Typography>
-
+                  <Tooltip title={urlItem.url} placement="top" arrow>
                     <Link
                       href={urlItem.url}
                       target="_blank"
                       rel="noopener noreferrer"
                       variant="caption"
                       sx={{
+                        fontWeight: 600,
                         color: urlItem.has_error ? 'error.dark' : 'primary.main',
                         textDecoration: 'none',
                         '&:hover': { textDecoration: 'underline' },
-                        maxWidth: { xs: 200, md: 320 },
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
                         whiteSpace: 'nowrap',
-                        display: 'inline-block',
+                        minWidth: 0,
+                        display: 'block',
                       }}
-                      title={urlItem.url}
                     >
-                      {urlItem.url}
+                      {urlItem.domain || urlItem.url}
                     </Link>
-                  </Stack>
+                  </Tooltip>
                 </Stack>
 
-                {/* Precio o estado y botón eliminar */}
-                <Stack direction="row" alignItems="center" spacing={0.5} sx={{ flexShrink: 0 }}>
+                {/* Precio y botón eliminar */}
+                <Stack direction="row" alignItems="center" spacing={0.35} sx={{ flexShrink: 0 }}>
                   {urlItem.price_formatted ? (
-                    <Typography variant="caption" sx={{ fontWeight: 700, mr: 0.5 }}>
+                    <Typography variant="caption" sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}>
                       {urlItem.price_formatted}
                     </Typography>
                   ) : null}
@@ -320,9 +391,9 @@ export function PreciosCompetidoresTable({ filters }) {
                       size="small"
                       color="error"
                       onClick={() => handleDeleteUrl(urlItem)}
-                      sx={{ p: 0.5 }}
+                      sx={{ p: 0.35 }}
                     >
-                      <Iconify icon="solar:trash-bin-trash-bold" width={16} />
+                      <Iconify icon="solar:trash-bin-trash-bold" width={15} />
                     </IconButton>
                   </Tooltip>
                 </Stack>
@@ -333,25 +404,152 @@ export function PreciosCompetidoresTable({ filters }) {
       },
     },
     {
-      field: 'agregar',
-      headerName: 'Agregar',
-      width: 130,
+      field: 'comments',
+      headerName: 'Comentarios',
+      minWidth: 145,
+      flex: 0.9,
+      sortable: false,
+      filterable: false,
+      disableColumnMenu: true,
+      renderCell: (params) => {
+        const comment = (params.row.comments || '').trim();
+
+        if (!comment) {
+          return (
+            <Button
+              size="small"
+              variant="soft"
+              color="inherit"
+              startIcon={<Iconify icon="solar:chat-line-bold" width={14} />}
+              onClick={() => handleOpenCommentDialog(params.row)}
+              sx={{
+                color: 'text.secondary',
+                fontWeight: 500,
+                fontSize: '0.75rem',
+                px: 1,
+                whiteSpace: 'nowrap',
+              }}
+            >
+              Nota
+            </Button>
+          );
+        }
+
+        return (
+          <Stack
+            direction="row"
+            alignItems="flex-start"
+            spacing={0.25}
+            sx={{ py: 1, width: 1 }}
+          >
+            <Tooltip
+              title={
+                <Box sx={{ whiteSpace: 'pre-wrap', maxWidth: 360 }}>
+                  {comment}
+                </Box>
+              }
+              placement="top"
+              arrow
+            >
+              <Box
+                onClick={() => handleOpenCommentDialog(params.row)}
+                sx={{
+                  flex: 1,
+                  minWidth: 0,
+                  px: 1,
+                  py: 0.6,
+                  borderRadius: 1,
+                  cursor: 'pointer',
+                  bgcolor: 'background.neutral',
+                  border: (th) => `1px solid ${th.palette.divider}`,
+                  transition: (th) => th.transitions.create(['border-color', 'background-color']),
+                  '&:hover': {
+                    borderColor: 'primary.main',
+                    bgcolor: 'action.hover',
+                  },
+                }}
+              >
+                <Typography
+                  variant="caption"
+                  sx={{
+                    color: 'text.primary',
+                    display: '-webkit-box',
+                    WebkitLineClamp: 3,
+                    WebkitBoxOrient: 'vertical',
+                    overflow: 'hidden',
+                    whiteSpace: 'pre-wrap',
+                    wordBreak: 'break-word',
+                    lineHeight: 1.35,
+                  }}
+                >
+                  {comment}
+                </Typography>
+              </Box>
+            </Tooltip>
+
+            <Tooltip title="Editar comentario" placement="top">
+              <IconButton
+                size="small"
+                color="primary"
+                onClick={() => handleOpenCommentDialog(params.row)}
+                sx={{ p: 0.35, mt: 0.25, flexShrink: 0 }}
+              >
+                <Iconify icon="solar:pen-bold" width={14} />
+              </IconButton>
+            </Tooltip>
+          </Stack>
+        );
+      },
+    },
+    {
+      field: 'acciones',
+      headerName: 'Acciones',
+      width: 105,
       align: 'center',
       headerAlign: 'center',
       sortable: false,
       filterable: false,
       disableColumnMenu: true,
       renderCell: (params) => (
-        <Button
-          size="small"
-          variant="soft"
-          color="primary"
-          startIcon={<Iconify icon="mingcute:add-line" />}
-          onClick={() => handleOpenAddDialog(params.row)}
-          sx={{ whiteSpace: 'nowrap' }}
-        >
-          Agregar
-        </Button>
+        <Stack spacing={0.6} sx={{ py: 0.75, width: 1 }}>
+          <Tooltip title="Agregar URL de competencia" placement="left">
+            <Button
+              size="small"
+              variant="soft"
+              color="primary"
+              startIcon={<Iconify icon="mingcute:add-line" width={15} />}
+              onClick={() => handleOpenAddDialog(params.row)}
+              sx={{
+                px: 1,
+                py: 0.35,
+                minWidth: 0,
+                fontSize: '0.75rem',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              URL
+            </Button>
+          </Tooltip>
+
+          <Tooltip title="Marcar producto como excluido" placement="left">
+            <Button
+              size="small"
+              variant="soft"
+              color="warning"
+              startIcon={<Iconify icon="solar:forbidden-circle-bold" width={14} />}
+              onClick={() => handleOpenExcludeDialog(params.row)}
+              sx={{
+                px: 1,
+                py: 0.35,
+                minWidth: 0,
+                fontSize: '0.75rem',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              Excluir
+            </Button>
+          </Tooltip>
+        </Stack>
       ),
     },
   ];
@@ -365,10 +563,18 @@ export function PreciosCompetidoresTable({ filters }) {
         onSuccess={fetchTableData}
       />
 
-      <PreciosImportDialog
-        open={openImportDialog}
-        onClose={() => setOpenImportDialog(false)}
+      <PreciosCompetidorCommentDialog
+        open={openCommentDialog}
+        onClose={handleCloseCommentDialog}
+        product={selectedProductForComment}
         onSuccess={fetchTableData}
+      />
+
+      <PreciosCompetidorExcludeDialog
+        open={openExcludeDialog}
+        onClose={handleCloseExcludeDialog}
+        product={selectedProductForExclude}
+        onSuccess={handleExcludeSuccess}
       />
 
       <Card sx={{ borderRadius: 2 }}>
@@ -376,9 +582,6 @@ export function PreciosCompetidoresTable({ filters }) {
           rows={rows}
           columns={columns}
           pagination
-          checkboxSelection
-          onRowSelectionModelChange={setRowSelectionModel}
-          rowSelectionModel={rowSelectionModel}
           localeText={esES.components.MuiDataGrid.defaultProps.localeText}
           loading={isLoading}
           filterMode="server"
@@ -390,7 +593,6 @@ export function PreciosCompetidoresTable({ filters }) {
           getRowHeight={() => 'auto'}
           disableRowSelectionOnClick
           slots={{
-            toolbar: CustomCompetidoresToolbar,
             noRowsOverlay: () => (
               <EmptyContent
                 title="No se encontraron productos"
@@ -402,19 +604,17 @@ export function PreciosCompetidoresTable({ filters }) {
               <EmptyContent title="No se encontraron resultados" sx={{ py: 5 }} />
             ),
           }}
-          slotProps={{
-            toolbar: {
-              selectedCount: rowSelectionModel.length,
-              onExport: handleExportJson,
-              onImport: () => setOpenImportDialog(true),
-            },
-          }}
           sx={{
             minHeight: 480,
             [`& .${gridClasses.cell}`]: {
               alignItems: 'center',
               display: 'inline-flex',
-              py: 1,
+              py: 0.75,
+              px: 1,
+              lineHeight: 'normal',
+            },
+            [`& .${gridClasses.columnHeader}`]: {
+              px: 1,
             },
             border: 'none',
           }}
@@ -431,48 +631,6 @@ PreciosCompetidoresTable.propTypes = {
     modelo: PropTypes.string,
     soloSinCompetidores: PropTypes.bool,
   }).isRequired,
-};
-
-// ----------------------------------------------------------------------
-
-function CustomCompetidoresToolbar({ selectedCount, onExport, onImport }) {
-  return (
-    <GridToolbarContainer sx={{ p: 1.5, gap: 1 }}>
-      <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" flex={1}>
-        {/* Botón Exportar JSON */}
-        <Button
-          size="small"
-          variant="contained"
-          color="primary"
-          startIcon={<Iconify icon="solar:download-track-bold" />}
-          onClick={onExport}
-          disabled={selectedCount === 0}
-        >
-          Exportar JSON {selectedCount > 0 ? `(${selectedCount})` : ''}
-        </Button>
-
-        {/* Botón Importar JSON */}
-        <Button
-          size="small"
-          variant="outlined"
-          color="primary"
-          startIcon={<Iconify icon="solar:upload-track-bold" />}
-          onClick={onImport}
-        >
-          Importar JSON
-        </Button>
-      </Stack>
-
-      <GridToolbarQuickFilter
-        quickFilterParser={(searchInput) => searchInput.split(',').map((value) => value.trim())}
-        quickFilterFormatter={(quickFilterValues) => quickFilterValues.join(', ')}
-      />
-    </GridToolbarContainer>
-  );
-}
-
-CustomCompetidoresToolbar.propTypes = {
-  selectedCount: PropTypes.number,
-  onExport: PropTypes.func,
-  onImport: PropTypes.func,
+  refreshTrigger: PropTypes.number,
+  onProductExcluded: PropTypes.func,
 };

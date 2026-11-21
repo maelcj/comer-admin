@@ -16,7 +16,12 @@ import { Iconify } from 'src/components/iconify';
 
 // ----------------------------------------------------------------------
 
-export function PreciosResumen({ filters }) {
+export function PreciosResumen({
+  filters,
+  selectedComparativa = 'all',
+  onSelectComparativa,
+  refreshTrigger = 0,
+}) {
   const theme = useTheme();
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState({
@@ -31,12 +36,22 @@ export function PreciosResumen({ filters }) {
     avg_pct_below: 0,
   });
 
+  const marca = filters?.marca;
+  const type = filters?.type;
+  const modelo = filters?.modelo;
+  const soloConCompetidores = filters?.soloConCompetidores;
+
   useEffect(() => {
     let isMounted = true;
     const fetchResumen = async () => {
       setLoading(true);
       try {
-        const res = await getResumenPrecios(filters);
+        const res = await getResumenPrecios({
+          marca,
+          type,
+          modelo,
+          soloConCompetidores,
+        });
         if (isMounted && res) {
           setData(res);
         }
@@ -52,7 +67,7 @@ export function PreciosResumen({ filters }) {
     return () => {
       isMounted = false;
     };
-  }, [filters]);
+  }, [marca, type, modelo, soloConCompetidores, refreshTrigger]);
 
   return (
     <Grid container spacing={2.5} sx={{ mb: 3 }}>
@@ -64,6 +79,8 @@ export function PreciosResumen({ filters }) {
           loading={loading}
           icon="solar:box-minimalistic-bold-duotone"
           color="primary"
+          selected={selectedComparativa === 'all' || !selectedComparativa}
+          onClick={onSelectComparativa ? () => onSelectComparativa('all') : undefined}
           subtitle={
             data.total_comparable > 0
               ? `${data.total_comparable.toLocaleString()} con precios de competencia`
@@ -82,6 +99,8 @@ export function PreciosResumen({ filters }) {
           color="success"
           percentage={`${data.pct_below}%`}
           percentageLabel="de comparables"
+          selected={selectedComparativa === 'below'}
+          onClick={onSelectComparativa ? () => onSelectComparativa('below') : undefined}
           subtitle={
             data.count_below > 0
               ? `Promedio: ${data.avg_pct_below}% más barato`
@@ -100,6 +119,8 @@ export function PreciosResumen({ filters }) {
           color="error"
           percentage={`${data.pct_above}%`}
           percentageLabel="de comparables"
+          selected={selectedComparativa === 'above'}
+          onClick={onSelectComparativa ? () => onSelectComparativa('above') : undefined}
           subtitle={
             data.count_above > 0
               ? `Promedio: +${data.avg_pct_above}% más caro`
@@ -116,6 +137,8 @@ export function PreciosResumen({ filters }) {
           loading={loading}
           icon="solar:scale-bold-duotone"
           color="info"
+          selected={selectedComparativa === 'equal'}
+          onClick={onSelectComparativa ? () => onSelectComparativa('equal') : undefined}
           subtitle={
             data.total_comparable > 0
               ? `${(
@@ -137,7 +160,11 @@ PreciosResumen.propTypes = {
     type: PropTypes.string,
     modelo: PropTypes.string,
     soloConCompetidores: PropTypes.bool,
+    comparativa: PropTypes.string,
   }),
+  selectedComparativa: PropTypes.string,
+  onSelectComparativa: PropTypes.func,
+  refreshTrigger: PropTypes.number,
 };
 
 // ----------------------------------------------------------------------
@@ -151,6 +178,8 @@ function MetricCard({
   percentage,
   percentageLabel,
   subtitle,
+  selected = false,
+  onClick,
 }) {
   const theme = useTheme();
   const mainColor = theme.palette[color]?.main || theme.palette.primary.main;
@@ -158,6 +187,7 @@ function MetricCard({
 
   return (
     <Card
+      onClick={onClick}
       sx={{
         p: 2.5,
         height: '100%',
@@ -165,11 +195,25 @@ function MetricCard({
         flexDirection: 'column',
         justifyContent: 'space-between',
         borderRadius: 2,
-        boxShadow: (th) => th.customShadows?.card || 1,
+        boxShadow: (th) =>
+          selected ? `0 0 0 2px ${mainColor}` : th.customShadows?.card || 1,
         position: 'relative',
         overflow: 'hidden',
+        cursor: onClick ? 'pointer' : 'default',
+        transition: (th) =>
+          th.transitions.create(['box-shadow', 'transform', 'border-color', 'background-color'], {
+            duration: th.transitions.duration.shorter,
+          }),
+        border: (th) =>
+          selected ? `2px solid ${mainColor}` : `1px solid ${alpha(th.palette.grey[500], 0.2)}`,
+        bgcolor: (th) =>
+          selected ? alpha(mainColor, 0.05) : 'background.paper',
         '&:hover': {
-          boxShadow: (th) => th.customShadows?.z8 || 3,
+          boxShadow: (th) =>
+            selected
+              ? `0 0 0 2px ${mainColor}, ${th.customShadows?.z8 || ''}`
+              : th.customShadows?.z8 || 3,
+          transform: onClick ? 'translateY(-2px)' : 'none',
         },
       }}
     >
@@ -257,4 +301,6 @@ MetricCard.propTypes = {
   percentage: PropTypes.string,
   percentageLabel: PropTypes.string,
   subtitle: PropTypes.string,
+  selected: PropTypes.bool,
+  onClick: PropTypes.func,
 };

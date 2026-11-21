@@ -50,6 +50,25 @@ export async function getResumenPrecios(filters) {
     });
 }
 
+export async function getTablaAlertasTiendas(paginationModel, filterModel, filters, sortModel) {
+  const url = endpoints.precios.getTablaAlertasTiendas;
+
+  return axiosServer()
+    .get(url, {
+      params: {
+        paginationModel,
+        filterModel,
+        filters,
+        sortModel,
+      },
+    })
+    .then((res) => res.data)
+    .catch((error) => {
+      console.error('Error fetching tabla alertas tiendas:', error);
+      return { rows: [], totalRows: 0, pageCount: 0 };
+    });
+}
+
 export async function getTablaCompetidores(paginationModel, filterModel, filters) {
   const url = endpoints.precios.getTablaCompetidores;
 
@@ -102,31 +121,81 @@ export async function eliminarCompetidorUrl(id) {
     });
 }
 
-export async function importarMatches(matches) {
-  const endpoint = endpoints.precios.importarMatches;
+export async function getTablaCompetidoresExcluidos(paginationModel, filterModel, filters) {
+  const url = endpoints.precios.getTablaCompetidoresExcluidos;
 
   return axiosServer()
-    .post(endpoint, {
-      matches,
+    .get(url, {
+      params: {
+        paginationModel,
+        filterModel,
+        filters,
+      },
     })
     .then((res) => res.data)
     .catch((error) => {
-      console.error('Error importando matches:', error);
-      const message = error?.response?.data?.message || 'Error al importar registros';
-      return { success: false, message, created: 0, skipped: 0, errors: [message] };
+      console.error('Error fetching tabla competidores excluidos:', error);
+      return { rows: [], totalRows: 0, pageCount: 0 };
     });
 }
 
-export async function exportarJson(product_ids) {
-  const endpoint = endpoints.precios.exportarJson;
+export async function actualizarComentarioProducto(monitored_product_id, comments) {
+  const endpoint = endpoints.precios.actualizarComentarioProducto;
 
   return axiosServer()
     .post(endpoint, {
-      product_ids,
+      monitored_product_id,
+      comments: comments ?? '',
     })
     .then((res) => res.data)
     .catch((error) => {
-      console.error('Error exportando json:', error);
-      return { products: [] };
+      console.error('Error actualizando comentario del producto:', error);
+      const message = error?.response?.data?.message || 'Error al guardar el comentario';
+      return { success: false, message };
+    });
+}
+
+export async function actualizarExcluidoProducto(monitored_product_id, excluded, comments) {
+  const endpoint = endpoints.precios.actualizarExcluidoProducto;
+
+  const payload = {
+    monitored_product_id,
+    excluded: Boolean(excluded),
+  };
+
+  if (comments !== undefined) {
+    payload.comments = comments ?? '';
+  }
+
+  return axiosServer()
+    .post(endpoint, payload)
+    .then((res) => res.data)
+    .catch((error) => {
+      console.error('Error actualizando estado excluido del producto:', error);
+      const message =
+        error?.message ||
+        error?.response?.data?.message ||
+        'Error al actualizar el estado del producto';
+      return { success: false, message };
+    });
+}
+
+export async function sincronizarProductosPrecios() {
+  const endpoint = endpoints.precios.sincronizarProductos;
+
+  return axiosServer()
+    .post(endpoint, {}, { timeout: 180000 })
+    .then((res) => res.data)
+    .catch((error) => {
+      console.error('Error ejecutando sincronización de productos monitoreados:', error);
+      const message =
+        error?.message ||
+        error?.response?.data?.message ||
+        (typeof error === 'string' ? error : 'Error al sincronizar los productos de la tienda');
+      return {
+        success: false,
+        already_running: Boolean(error?.already_running),
+        message,
+      };
     });
 }

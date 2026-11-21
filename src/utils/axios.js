@@ -130,11 +130,14 @@ export const endpoints = {
   precios: {
     getTablaPrecios: '/api/admin/precios/getTablaPrecios',
     getResumenPrecios: '/api/admin/precios/getResumenPrecios',
+    getTablaAlertasTiendas: '/api/admin/precios/getTablaAlertasTiendas',
     getTablaCompetidores: '/api/admin/precios/getTablaCompetidores',
+    getTablaCompetidoresExcluidos: '/api/admin/precios/getTablaCompetidoresExcluidos',
     agregarCompetidorUrl: '/api/admin/precios/agregarCompetidorUrl',
     eliminarCompetidorUrl: '/api/admin/precios/eliminarCompetidorUrl',
-    importarMatches: '/api/admin/precios/importarMatches',
-    exportarJson: '/api/admin/precios/exportarJson',
+    actualizarComentarioProducto: '/api/admin/precios/actualizarComentarioProducto',
+    actualizarExcluidoProducto: '/api/admin/precios/actualizarExcluidoProducto',
+    sincronizarProductos: '/api/admin/precios/sincronizarProductos',
   },
   refacciones: {
     list: '/api/admin/refacciones/getTablaRefacciones',

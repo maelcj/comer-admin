@@ -6,7 +6,9 @@ import Card from '@mui/material/Card';
 import Stack from '@mui/material/Stack';
 import Switch from '@mui/material/Switch';
 import Button from '@mui/material/Button';
+import MenuItem from '@mui/material/MenuItem';
 import TextField from '@mui/material/TextField';
+import Typography from '@mui/material/Typography';
 import InputAdornment from '@mui/material/InputAdornment';
 import FormControlLabel from '@mui/material/FormControlLabel';
 
@@ -19,7 +21,8 @@ export function PreciosFiltros({ filters, onFiltersChange }) {
     Boolean(filters.marca) ||
     Boolean(filters.type) ||
     Boolean(filters.modelo) ||
-    Boolean(filters.soloConCompetidores);
+    Boolean(filters.soloConCompetidores) ||
+    (Boolean(filters.comparativa) && filters.comparativa !== 'all');
 
   const handleMarcaChange = (event) => {
     onFiltersChange({
@@ -42,6 +45,13 @@ export function PreciosFiltros({ filters, onFiltersChange }) {
     });
   };
 
+  const handleComparativaChange = (event) => {
+    onFiltersChange({
+      ...filters,
+      comparativa: event.target.value,
+    });
+  };
+
   const handleCompetidoresSwitch = (event) => {
     onFiltersChange({
       ...filters,
@@ -55,6 +65,7 @@ export function PreciosFiltros({ filters, onFiltersChange }) {
       type: '',
       modelo: '',
       soloConCompetidores: false,
+      comparativa: 'all',
     });
   };
 
@@ -71,6 +82,8 @@ export function PreciosFiltros({ filters, onFiltersChange }) {
           alignItems={{ xs: 'stretch', sm: 'center' }}
           spacing={2}
           flex={1}
+          flexWrap="wrap"
+          useFlexGap
         >
           {/* Filtro Marca */}
           <TextField
@@ -85,7 +98,7 @@ export function PreciosFiltros({ filters, onFiltersChange }) {
                 </InputAdornment>
               ),
             }}
-            sx={{ minWidth: { sm: 180 } }}
+            sx={{ minWidth: { sm: 160 } }}
           />
 
           {/* Filtro Tipo */}
@@ -101,7 +114,7 @@ export function PreciosFiltros({ filters, onFiltersChange }) {
                 </InputAdornment>
               ),
             }}
-            sx={{ minWidth: { sm: 180 } }}
+            sx={{ minWidth: { sm: 160 } }}
           />
 
           {/* Filtro Modelo */}
@@ -117,8 +130,46 @@ export function PreciosFiltros({ filters, onFiltersChange }) {
                 </InputAdornment>
               ),
             }}
-            sx={{ minWidth: { sm: 180 } }}
+            sx={{ minWidth: { sm: 160 } }}
           />
+
+          {/* Filtro Comparativa de Precios con Competencia */}
+          <TextField
+            select
+            size="small"
+            value={filters.comparativa || 'all'}
+            onChange={handleComparativaChange}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Iconify icon="solar:sort-vertical-bold-duotone" sx={{ color: 'text.disabled' }} />
+                </InputAdornment>
+              ),
+            }}
+            sx={{ minWidth: { sm: 220 } }}
+          >
+            <MenuItem value="all">
+              <Typography variant="body2">Todas las comparativas</Typography>
+            </MenuItem>
+            <MenuItem value="below">
+              <Stack direction="row" alignItems="center" spacing={1}>
+                <Iconify icon="solar:arrow-down-bold-duotone" sx={{ color: 'success.main' }} width={18} />
+                <Typography variant="body2">Más bajos que competencia</Typography>
+              </Stack>
+            </MenuItem>
+            <MenuItem value="above">
+              <Stack direction="row" alignItems="center" spacing={1}>
+                <Iconify icon="solar:arrow-up-bold-duotone" sx={{ color: 'error.main' }} width={18} />
+                <Typography variant="body2">Más altos que competencia</Typography>
+              </Stack>
+            </MenuItem>
+            <MenuItem value="equal">
+              <Stack direction="row" alignItems="center" spacing={1}>
+                <Iconify icon="solar:scale-bold-duotone" sx={{ color: 'info.main' }} width={18} />
+                <Typography variant="body2">Iguales a competencia</Typography>
+              </Stack>
+            </MenuItem>
+          </TextField>
 
           {/* Switch Solo con competidores */}
           <FormControlLabel
@@ -163,6 +214,7 @@ PreciosFiltros.propTypes = {
     type: PropTypes.string,
     modelo: PropTypes.string,
     soloConCompetidores: PropTypes.bool,
+    comparativa: PropTypes.string,
   }).isRequired,
   onFiltersChange: PropTypes.func.isRequired,
 };
