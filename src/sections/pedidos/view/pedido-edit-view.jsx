@@ -50,9 +50,14 @@ export function PedidoEditView({ pedidoPrev, estadosPedido }) {
 
   const handleGetPedido = async () => {
     NProgress.start();
-    const res = await getPedido(pedido.id);
-    setPedido(res.pedido);
-    NProgress.done();
+    try {
+      const res = await getPedido(pedido.id);
+      if (res?.pedido) {
+        setPedido(res.pedido);
+      }
+    } finally {
+      NProgress.done();
+    }
   };
 
   const handleActualizarEstado = async (estado) => {

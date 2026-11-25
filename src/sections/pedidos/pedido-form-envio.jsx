@@ -1,6 +1,6 @@
 import { z as zod } from 'zod';
-import { useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { useMemo, useState, useEffect } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 
 import Grid from '@mui/material/Grid';
@@ -62,7 +62,7 @@ export const NewProductSchema = zod.object({
 
 // ----------------------------------------------------------------------
 
-export function FormEnvio({ pedido }) {
+export function FormEnvio({ pedido, handleGetPedido }) {
   const [dialogOpen, setDialogOpen] = useState(false);
 
   const defaultValues = useMemo(
@@ -93,6 +93,19 @@ export function FormEnvio({ pedido }) {
     formState: { isSubmitting, isDirty },
   } = methods;
 
+  // Prevenir pérdida de datos al salir o recargar la página
+  useEffect(() => {
+    const handleBeforeUnload = (event) => {
+      if (isDirty) {
+        event.preventDefault();
+        event.returnValue = '';
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [isDirty]);
+
   const onSubmit = handleSubmit(async (data) => {
     const res = await guardarDatosEnvio(pedido.id, data);
 
@@ -100,6 +113,7 @@ export function FormEnvio({ pedido }) {
 
     // Resetear el estado dirty después de guardar exitosamente
     reset(data);
+    await handleGetPedido?.();
     return toast.success(res.message);
   });
 
@@ -113,16 +127,16 @@ export function FormEnvio({ pedido }) {
 
   const handleSelectDatosEnvio = (datos) => {
     // Copiar los datos al formulario
-    setValue('recibe', datos.recibe || '');
-    setValue('empresa', datos.empresa || '');
-    setValue('calle', datos.calle || '');
-    setValue('colonia', datos.colonia || '');
-    setValue('ciudad', datos.ciudad || '');
-    setValue('estado', datos.estado || 'Aguascalientes');
-    setValue('telefono', datos.telefono || '');
-    setValue('cp', datos.cp || '');
-    setValue('instrucciones', datos.instrucciones || '');
-    setValue('comentarios', datos.comentarios || '');
+    setValue('recibe', datos.recibe || '', { shouldDirty: true });
+    setValue('empresa', datos.empresa || '', { shouldDirty: true });
+    setValue('calle', datos.calle || '', { shouldDirty: true });
+    setValue('colonia', datos.colonia || '', { shouldDirty: true });
+    setValue('ciudad', datos.ciudad || '', { shouldDirty: true });
+    setValue('estado', datos.estado || 'Aguascalientes', { shouldDirty: true });
+    setValue('telefono', datos.telefono || '', { shouldDirty: true });
+    setValue('cp', datos.cp || '', { shouldDirty: true });
+    setValue('instrucciones', datos.instrucciones || '', { shouldDirty: true });
+    setValue('comentarios', datos.comentarios || '', { shouldDirty: true });
 
     toast.success('Datos de envío copiados correctamente');
   };

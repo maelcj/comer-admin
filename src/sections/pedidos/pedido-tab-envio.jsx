@@ -19,7 +19,7 @@ export function TabEnvio({ pedido, handleGetPedido }) {
             <Typography variant="h6" sx={{ color: 'text.disabled', mb: 3 }}>
               Datos de envío:
             </Typography>
-            <FormEnvio pedido={pedido} />
+            <FormEnvio pedido={pedido} handleGetPedido={handleGetPedido} />
           </Box>
         </Card>
       </Grid>
@@ -29,7 +29,7 @@ export function TabEnvio({ pedido, handleGetPedido }) {
             <Typography variant="h6" sx={{ color: 'text.disabled', mb: 3 }}>
               Datos de facturación:
             </Typography>
-            <FormFacturacion pedido={pedido} />
+            <FormFacturacion pedido={pedido} handleGetPedido={handleGetPedido} />
           </Box>
         </Card>
       </Grid>

@@ -1,6 +1,6 @@
 import { z as zod } from 'zod';
-import { useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { useMemo, useState, useEffect } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 
 import Grid from '@mui/material/Grid';
@@ -230,7 +230,7 @@ const uso_cfdi = [
 
 // ----------------------------------------------------------------------
 
-export function FormFacturacion({ pedido }) {
+export function FormFacturacion({ pedido, handleGetPedido }) {
   const [dialogOpen, setDialogOpen] = useState(false);
 
   const defaultValues = useMemo(
@@ -261,6 +261,19 @@ export function FormFacturacion({ pedido }) {
     formState: { isSubmitting, isDirty },
   } = methods;
 
+  // Prevenir pérdida de datos al salir o recargar la página
+  useEffect(() => {
+    const handleBeforeUnload = (event) => {
+      if (isDirty) {
+        event.preventDefault();
+        event.returnValue = '';
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [isDirty]);
+
   const onSubmit = handleSubmit(async (data) => {
     const res = await guardarDatosFacturacion(pedido.id, data);
 
@@ -268,6 +281,7 @@ export function FormFacturacion({ pedido }) {
 
     // Resetear el estado dirty después de guardar exitosamente
     reset(data);
+    await handleGetPedido?.();
     return toast.success(res.message);
   });
 
@@ -281,16 +295,16 @@ export function FormFacturacion({ pedido }) {
 
   const handleSelectDatosFacturacion = (datos) => {
     // Copiar los datos al formulario
-    setValue('razon', datos.razon || '');
-    setValue('rfc', datos.rfc || '');
-    setValue('persona', datos.persona || 'general');
-    setValue('correo', datos.correo || '');
-    setValue('regimen', datos.regimen || '601');
-    setValue('metodo_pago', datos.metodo_pago || '');
-    setValue('forma_pago', datos.forma_pago || '');
-    setValue('uso_cfdi', datos.uso_cfdi || '');
-    setValue('cp', datos.cp || '');
-    setValue('comentarios', datos.comentarios || '');
+    setValue('razon', datos.razon || '', { shouldDirty: true });
+    setValue('rfc', datos.rfc || '', { shouldDirty: true });
+    setValue('persona', datos.persona || 'general', { shouldDirty: true });
+    setValue('correo', datos.correo || '', { shouldDirty: true });
+    setValue('regimen', datos.regimen || '601', { shouldDirty: true });
+    setValue('metodo_pago', datos.metodo_pago || '', { shouldDirty: true });
+    setValue('forma_pago', datos.forma_pago || '', { shouldDirty: true });
+    setValue('uso_cfdi', datos.uso_cfdi || '', { shouldDirty: true });
+    setValue('cp', datos.cp || '', { shouldDirty: true });
+    setValue('comentarios', datos.comentarios || '', { shouldDirty: true });
 
     toast.success('Datos de facturación copiados correctamente');
   };
@@ -313,40 +327,42 @@ export function FormFacturacion({ pedido }) {
         </Grid>
         <Grid item xs={12} md={6}>
           <Field.Select native size="small" name="regimen" label="régimen fiscal">
-            <option value="601">General de Ley Personas Morales</option>
-            <option value="603">Personas Morales con Fines no Lucrativos</option>
-            <option value="605">Sueldos y Salarios e Ingresos Asimilados a Salarios</option>
-            <option value="606">Arrendamiento</option>
-            <option value="607">Régimen de Enajenación o Adquisición de Bienes</option>
-            <option value="608">Demás ingresos</option>
-            <option value="609">Consolidación</option>
+            <option value="601">601 General de Ley Personas Morales</option>
+            <option value="603">603 Personas Morales con Fines no Lucrativos</option>
+            <option value="605">605 Sueldos y Salarios e Ingresos Asimilados a Salarios</option>
+            <option value="606">606 Arrendamiento</option>
+            <option value="607">607 Régimen de Enajenación o Adquisición de Bienes</option>
+            <option value="608">608 Demás ingresos</option>
+            <option value="609">609 Consolidación</option>
             <option value="610">
-              Residentes en el Extranjero sin Establecimiento Permanente en México
+              610 Residentes en el Extranjero sin Establecimiento Permanente en México
             </option>
-            <option value="611">Ingresos por Dividendos (socios y accionistas)</option>
+            <option value="611">611 Ingresos por Dividendos (socios y accionistas)</option>
             <option value="612">
-              Personas Físicas con Actividades Empresariales y Profesionales
+              612 Personas Físicas con Actividades Empresariales y Profesionales
             </option>
-            <option value="614">Ingresos por intereses</option>
-            <option value="615">Régimen de los ingresos por obtención de premios</option>
-            <option value="616">Sin obligaciones fiscales</option>
+            <option value="614">614 Ingresos por intereses</option>
+            <option value="615">615 Régimen de los ingresos por obtención de premios</option>
+            <option value="616">616 Sin obligaciones fiscales</option>
             <option value="620">
-              Sociedades Cooperativas de Producción que optan por diferir sus ingresos
+              620 Sociedades Cooperativas de Producción que optan por diferir sus ingresos
             </option>
-            <option value="621">Incorporación Fiscal</option>
-            <option value="622">Actividades Agrícolas, Ganaderas, Silvícolas y Pesqueras</option>
-            <option value="623">Opcional para Grupos de Sociedades</option>
-            <option value="624">Coordinados</option>
+            <option value="621">621 Incorporación Fiscal</option>
+            <option value="622">
+              622 Actividades Agrícolas, Ganaderas, Silvícolas y Pesqueras
+            </option>
+            <option value="623">623 Opcional para Grupos de Sociedades</option>
+            <option value="624">624 Coordinados</option>
             <option value="625">
-              Régimen de las Actividades Empresariales con ingresos a través de Plataformas
+              625 Régimen de las Actividades Empresariales con ingresos a través de Plataformas
               Tecnológicas
             </option>
-            <option value="626">Régimen Simplificado de Confianza</option>
-            <option value="628">Hidrocarburos</option>
+            <option value="626">626 Régimen Simplificado de Confianza</option>
+            <option value="628">628 Hidrocarburos</option>
             <option value="629">
-              De los Regímenes Fiscales Preferentes y de las Empresas Multinacionales
+              629 De los Regímenes Fiscales Preferentes y de las Empresas Multinacionales
             </option>
-            <option value="630">Enajenación de acciones en bolsa de valores</option>
+            <option value="630">630 Enajenación de acciones en bolsa de valores</option>
           </Field.Select>
         </Grid>
         <Grid item xs={12} md={6}>
